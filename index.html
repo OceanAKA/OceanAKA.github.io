@@ -37,6 +37,8 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; }
+html { scrollbar-width: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 body {
   background: var(--bg);
   color: var(--fg);
@@ -156,16 +158,33 @@ section { padding-block: 80px 24px; }
   justify-content: center;
   overflow: hidden;
 }
-.figure svg { width: 100%; height: 100%; display: block; }
-.figure .ink { stroke: var(--fg); fill: none; }
-.figure .ink-fill { fill: var(--fg); }
-.figure .acc { stroke: var(--accent); fill: none; }
-.figure .acc-fill { fill: var(--accent); }
-.figure .warm-fill { fill: var(--warm); }
-.figure .bgfill { fill: var(--bg); }
-.figure .soft { fill: var(--accent-soft); }
-.figure .faint { stroke: var(--line); fill: none; }
-.figure text { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); letter-spacing: 0.04em; }
+.figure.media { margin: 0; padding: 0; }
+.figure video, .figure img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.figure video.phone { width: auto; max-width: 100%; height: calc(100% - 32px); border-radius: 18px; border: 1px solid var(--line); background: #fff; }
+.figure .zoom { width: 100%; height: 100%; }
+.figure .zoom img { object-fit: cover; }
+
+.gallery { grid-column: 1 / -1; display: grid; gap: 16px; }
+.figure.tall { aspect-ratio: 1 / 1; }
+.gallery.cols-3 .shot .zoom { aspect-ratio: 3 / 4; }
+.gallery.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gallery.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.gallery.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.shot { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.shot .zoom, .shot video { aspect-ratio: 4 / 3; max-width: 100%; width: 100%; background: var(--surface); border-radius: 6px; }
+.shot video { object-fit: cover; display: block; }
+.shot img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.shot figcaption { font-size: 14px; color: var(--muted); line-height: 1.45; }
+.zoom { position: relative; display: block; padding: 0; border: 0; margin: 0; cursor: zoom-in; overflow: hidden; background: var(--surface); border-radius: 6px; }
+.zoom img { position: absolute; inset: 0; transition: transform 0.4s ease; }
+.zoom:hover img { transform: scale(1.03); }
+
+.lightbox { border: 0; padding: 0; background: transparent; max-width: min(1200px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: visible; }
+.lightbox::backdrop { background: rgba(5, 12, 11, 0.86); }
+.lightbox figure { margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.lightbox img { max-width: 100%; max-height: calc(100vh - 120px); width: auto; height: auto; border-radius: 6px; display: block; }
+.lightbox figcaption { color: #E3EEEC; font-size: 15px; max-width: 70ch; text-align: center; }
+.lightbox .close { position: absolute; top: -8px; right: -8px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #E3EEEC; color: #0A1514; font-size: 22px; line-height: 1; cursor: pointer; }
 
 .p-body { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .p-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -221,15 +240,11 @@ section { padding-block: 80px 24px; }
 
 footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-/* Motion: one load sequence, plus the scan line and stop pulse in the diagrams */
+/* Motion: one load sequence */
 @media (prefers-reduced-motion: no-preference) {
   .rise { animation: rise 0.7s cubic-bezier(.2,.7,.2,1) both; }
   .rise.d1 { animation-delay: 0.08s; } .rise.d2 { animation-delay: 0.16s; } .rise.d3 { animation-delay: 0.24s; }
   @keyframes rise { from { transform: translateY(14px); opacity: 0.001; } to { transform: none; opacity: 1; } }
-  .scan { animation: scan 2.8s ease-in-out infinite alternate; }
-  @keyframes scan { from { transform: translateY(0); } to { transform: translateY(104px); } }
-  .pulse { animation: pulse 2.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
-  @keyframes pulse { from { transform: scale(0.6); opacity: 0.9; } to { transform: scale(2.2); opacity: 0; } }
 }
 
 @media (max-width: 860px) {
@@ -237,6 +252,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   .project { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .split { grid-template-columns: minmax(0, 1fr); gap: 56px; }
   .contact-box { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .gallery.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 520px) {
   body { font-size: 16px; }
@@ -247,6 +263,12 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   .timeline li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .project h3 { font-size: 26px; }
   section { padding-block: 64px 16px; }
+  .gallery.cols-2 { grid-template-columns: minmax(0, 1fr); }
+  .gallery.cols-3 { gap: 10px; }
+  .gallery.cols-3 .shot .zoom { aspect-ratio: 9 / 16; }
+  .gallery.cols-3 figcaption { font-size: 12.5px; }
+  .figure.tall { aspect-ratio: 4 / 5; }
+  .gallery { gap: 24px; }
 }
 </style>
 
@@ -294,140 +316,133 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   <section id="work" aria-labelledby="work-h">
     <div class="sec-head">
       <h2 id="work-h">Selected work</h2>
-      <span class="label">3 projects · shipped or in testing</span>
+      <span class="label">3 projects · screenshots and demos</span>
     </div>
 
     <div class="work">
       <!-- Card Price Checker -->
       <article class="project">
-        <div class="figure" aria-hidden="true">
-          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
-            <rect x="40" y="38" width="88" height="124" rx="7" class="soft"/>
-            <rect x="40" y="38" width="88" height="124" rx="7" class="ink" stroke-width="1.5"/>
-            <rect x="50" y="50" width="68" height="48" rx="3" class="faint" stroke-width="1.5"/>
-            <line x1="50" y1="110" x2="110" y2="110" class="faint" stroke-width="3" stroke-linecap="round"/>
-            <line x1="50" y1="120" x2="96" y2="120" class="faint" stroke-width="3" stroke-linecap="round"/>
-            <path d="M30 40 v-12 h12 M126 28 h12 v12 M138 160 v12 h-12 M42 172 h-12 v-12" class="acc" stroke-width="2"/>
-            <g class="scan"><line x1="30" y1="46" x2="138" y2="46" class="acc" stroke-width="2"/></g>
-            <path d="M150 100 h22" class="ink" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <text x="180" y="54">MARKET</text>
-            <rect x="180" y="60" width="104" height="8" rx="2" class="soft"/>
-            <rect x="180" y="60" width="78" height="8" rx="2" class="acc-fill"/>
-            <text x="180" y="96">PSA · CGC · BGS</text>
-            <rect x="180" y="102" width="104" height="8" rx="2" class="soft"/>
-            <rect x="180" y="102" width="96" height="8" rx="2" class="acc-fill"/>
-            <text x="180" y="138">JAPANESE</text>
-            <rect x="180" y="144" width="104" height="8" rx="2" class="soft"/>
-            <rect x="180" y="144" width="54" height="8" rx="2" class="acc-fill"/>
-          </svg>
-        </div>
+        <figure class="figure media">
+          <video src="assets/pricecheck-demo.mp4" poster="assets/pricecheck-demo-poster.jpg" autoplay muted loop playsinline aria-label="Demo: a holo card appears on a test stream and the Card Prices panel scans it automatically"></video>
+        </figure>
         <div class="p-body">
           <div class="p-top">
             <span class="pill live">Live · Chrome Web Store</span>
           </div>
           <h3>Card Price Checker for Whatnot</h3>
-          <p class="lede">A Chrome extension that watches a live card break, identifies the Pokémon card on screen, and shows what it is worth before the auction ends.</p>
+          <p class="lede">A Chrome extension that reads the Pokémon card a seller is holding up on a Whatnot live stream and shows its market price, so you can tell in seconds whether the bid is a deal.</p>
           <ul class="facts">
             <li><b>~95%</b><span>ID accuracy across 10+ stream setups</span></li>
             <li><b>0.1–0.7 s</b><span>price lookups, with caching</span></li>
             <li><b>84</b><span>automated tests with mocked APIs</span></li>
           </ul>
           <ul class="detail">
-            <li>AI vision on captured frames, on-device with Gemini Nano or through the Gemini and Claude APIs.</li>
-            <li>Merges three price sources, raw and PSA/CGC/BGS graded, in English and Japanese. Glare-resistant auto-scan.</li>
+            <li>Runs Chrome's on-device AI (Gemini Nano) when it can and falls back to a hosted card-ID service, so no API key is needed.</li>
+            <li>Auto-scan watches the video and fires once a new card settles, ignoring foil sparkle, hand sway and card backs.</li>
+            <li>English and Japanese prices, plus exact-grade prices for PSA, CGC and BGS slabs.</li>
           </ul>
-          <div class="stack mono">JavaScript · Chrome Extensions (MV3) · Gemini Nano</div>
+          <div class="stack mono">JavaScript · Chrome Extensions (MV3) · Gemini Nano · Cloudflare Workers</div>
           <div class="p-links">
             <a href="https://chromewebstore.google.com/detail/card-price-checker-for-wh/ipnheelahlheggemeckmlbckkbfpjboh">Install from Chrome Web Store ↗</a>
             <a href="https://github.com/OceanAKA/WhatnotPriceChecker">Source on GitHub ↗</a>
           </div>
         </div>
+        <div class="gallery cols-2">
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: auto-scan test results"><img src="assets/pricecheck-bench.jpg" alt="Auto-scan browser test results: 5 of 5 scenarios passed, with timelines marking when each scan fired" width="1000" height="700"></button>
+            <figcaption>The auto-scan test bench. A scripted fake stream plays through a real video element, and every scenario passes. Green lines mark when each scan fired.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: Card Prices panel"><img src="assets/pricecheck-panel.jpg" alt="The Card Prices panel beside a test stream, showing a matched card and its price" width="900" height="700"></button>
+            <figcaption>The Card Prices panel over a test stream. The card and price shown are stubbed test data.</figcaption>
+          </figure>
+        </div>
       </article>
 
       <!-- Nodoff -->
       <article class="project">
-        <div class="figure" aria-hidden="true">
-          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
-            <path d="M24 150 C 70 150, 70 96, 116 96 S 170 140, 214 112 S 262 52, 296 52" class="faint" stroke-width="10" stroke-linecap="round"/>
-            <path d="M24 150 C 70 150, 70 96, 116 96 S 170 140, 214 112 S 262 52, 296 52" class="acc" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="24" cy="150" r="6" class="bgfill"/><circle cx="24" cy="150" r="6" class="ink" stroke-width="2"/>
-            <circle cx="72" cy="128" r="5" class="bgfill"/><circle cx="72" cy="128" r="5" class="ink" stroke-width="2"/>
-            <circle cx="116" cy="96" r="5" class="bgfill"/><circle cx="116" cy="96" r="5" class="ink" stroke-width="2"/>
-            <circle cx="166" cy="124" r="5" class="bgfill"/><circle cx="166" cy="124" r="5" class="ink" stroke-width="2"/>
-            <circle cx="252" cy="74" r="10" class="warm-fill pulse"/>
-            <circle cx="252" cy="74" r="7" class="warm-fill"/>
-            <circle cx="296" cy="52" r="5" class="bgfill"/><circle cx="296" cy="52" r="5" class="ink" stroke-width="2"/>
-            <circle cx="214" cy="112" r="8" class="ink-fill"/>
-            <text x="200" y="140">YOU</text>
-            <text x="222" y="40">YOUR STOP</text>
-            <text x="24" y="182">HONOLULU BUS · STOP ALARM</text>
-          </svg>
-        </div>
+        <figure class="figure media tall">
+          <video class="phone" src="assets/nodoff-demo.mp4" poster="assets/nodoff-demo-poster.jpg" autoplay muted loop playsinline aria-label="Nodoff landing page with an animated map of stops and alarm zones"></video>
+        </figure>
         <div class="p-body">
           <div class="p-top">
             <span class="pill beta">Closed beta · TestFlight</span>
           </div>
           <h3>Nodoff</h3>
-          <p class="lede">A transit alarm for people who fall asleep on the bus. It tracks where you are on the route and wakes you before your stop.</p>
+          <p class="lede">A transit alarm for people who fall asleep on the bus. It sounds a loud, vibrating alarm as you approach your stop, even with the app closed or the phone locked.</p>
           <ul class="facts">
-            <li><b>3</b><span>apps: mobile, web dashboard, API</span></li>
-            <li><b>Honolulu</b><span>bus routes mapped from open transit data</span></li>
+            <li><b>3,831</b><span>stops from TheBus and Skyline data</span></li>
+            <li><b>18</b><span>nearest stops armed under iOS's 20-region limit</span></li>
             <li><b>4</b><span>beta testers on TestFlight</span></li>
           </ul>
           <ul class="detail">
-            <li>Python API with PostGIS spatial queries to decide when you are close enough to wake.</li>
+            <li>Uses the phone's native geofencing instead of streaming GPS, so it barely touches the battery while you ride.</li>
+            <li>Re-picks which stops to watch every 2 km, and survives the app being closed or the phone restarting.</li>
             <li>Added silent alerts after tester feedback.</li>
           </ul>
-          <div class="stack mono">React Native (Expo) · Next.js · FastAPI · PostgreSQL/PostGIS</div>
+          <div class="stack mono">Next.js · Capacitor · TypeScript · Postgres/Prisma · GTFS</div>
           <div class="p-links">
             <a href="https://nodoff.online">nodoff.online ↗</a>
           </div>
+        </div>
+        <div class="gallery cols-3">
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: onboarding"><img src="assets/nodoff-onboarding.jpg" alt="Nodoff onboarding sheet: Never miss your stop" width="780" height="1688"></button>
+            <figcaption>First-run onboarding.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: alarms dashboard"><img src="assets/nodoff-alarms.jpg" alt="Alarms dashboard listing three stops, one armed and monitoring" width="780" height="800"></button>
+            <figcaption>The alarms dashboard, shown with sample stops.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: landing page"><img src="assets/nodoff-landing.jpg" alt="Nodoff landing page: Miss naps, never your stop" width="780" height="1688"></button>
+            <figcaption>The landing page on a phone.</figcaption>
+          </figure>
         </div>
       </article>
 
       <!-- Critter Clash -->
       <article class="project">
-        <div class="figure" aria-hidden="true">
-          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
-            <g class="faint" stroke-width="1">
-              <rect x="40" y="30" width="240" height="140" rx="4"/>
-              <line x1="88" y1="30" x2="88" y2="170"/><line x1="136" y1="30" x2="136" y2="170"/>
-              <line x1="184" y1="30" x2="184" y2="170"/><line x1="232" y1="30" x2="232" y2="170"/>
-              <line x1="40" y1="65" x2="280" y2="65"/><line x1="40" y1="100" x2="280" y2="100"/><line x1="40" y1="135" x2="280" y2="135"/>
-            </g>
-            <circle cx="160" cy="100" r="26" class="soft"/>
-            <circle cx="160" cy="100" r="26" class="acc" stroke-width="2" stroke-dasharray="4 4"/>
-            <path d="M156 112 v-26 l14 6 l-14 6" class="ink" stroke-width="2" stroke-linejoin="round"/>
-            <circle cx="64" cy="48" r="9" class="acc" stroke-width="2"/>
-            <circle cx="256" cy="152" r="9" class="ink" stroke-width="2"/>
-            <rect x="58" y="112" width="12" height="12" rx="3" class="acc-fill"/>
-            <rect x="80" y="140" width="12" height="12" rx="3" class="acc-fill"/>
-            <rect x="106" y="76" width="12" height="12" rx="3" class="acc-fill"/>
-            <polygon points="214,40 222,54 206,54" class="warm-fill"/>
-            <polygon points="246,78 254,92 238,92" class="warm-fill"/>
-            <polygon points="204,118 212,132 196,132" class="warm-fill"/>
-            <text x="40" y="190">50 UNITS · 5 MAPS · CAPTURE POINTS</text>
-          </svg>
-        </div>
+        <figure class="figure media">
+          <button class="zoom" type="button" aria-label="Enlarge: battle map"><img src="assets/critter-map.jpg" alt="Overhead render of the Critter Clash battle map: a cliff-ringed arena with paths meeting at the center" width="1400" height="1050"></button>
+        </figure>
         <div class="p-body">
           <div class="p-top">
             <span class="pill beta">Playable beta · Roblox</span>
           </div>
           <h3>Critter Clash</h3>
-          <p class="lede">A multiplayer PvP battler. Players draft critters, fight over capture points, and spend what they earn to field stronger units.</p>
+          <p class="lede">A multiplayer army battler. Six sides earn food, spend it calling in animal troops by supply drop, and fight over seven meadows. Hold more ground, earn more food, field a bigger army.</p>
           <ul class="facts">
-            <li><b>50</b><span>unit types</span></li>
-            <li><b>5</b><span>maps</span></li>
-            <li><b>PvP + bots</b><span>with matchmaking</span></li>
+            <li><b>6</b><span>sides per match, filled by bots when short</span></li>
+            <li><b>12</b><span>animals, with 50 skins to hatch</span></li>
+            <li><b>15 min</b><span>rounds, last base standing wins</span></li>
           </ul>
           <ul class="detail">
-            <li>Game logic runs on the server so clients can't cheat.</li>
-            <li>PvE bots fill matches when there aren't enough players.</li>
+            <li>Game logic runs on the server so clients can't cheat. Every system is split into config, pure logic, server and client modules.</li>
+            <li>Lobby with ranked queue, loadouts, quests, leaderboards and saved progress.</li>
           </ul>
           <div class="stack mono">Roblox · Luau</div>
           <div class="p-links">
             <a href="https://www.roblox.com/games/74973903903329/CritterClash">Play on Roblox ↗</a>
           </div>
+        </div>
+        <div class="gallery cols-4">
+          <figure class="shot">
+            <video src="assets/critter-yeti-smash.mp4" poster="assets/critter-yeti-smash-poster.jpg" autoplay muted loop playsinline aria-label="Yeti boss performing its Glacier Smash attack"></video>
+            <figcaption>Yeti boss, Glacier Smash attack.</figcaption>
+          </figure>
+          <figure class="shot">
+            <video src="assets/critter-sandworm.mp4" poster="assets/critter-sandworm-poster.jpg" autoplay muted loop playsinline aria-label="Sandworm boss performing its Dune Sidewinder attack"></video>
+            <figcaption>Sandworm boss, Dune Sidewinder attack.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: valley view"><img src="assets/critter-valley.jpg" alt="Ground-level render of the battle map with trees, paths and cliffs" width="1200" height="900"></button>
+            <figcaption>The arena from ground level.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: egg collection"><img src="assets/critter-eggs.jpg" alt="Five biome eggs: river, desert, night, storm and snow" width="1400" height="741"></button>
+            <figcaption>Five biome eggs to hatch skins from.</figcaption>
+          </figure>
         </div>
       </article>
     </div>
@@ -537,7 +552,33 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   </footer>
 </div>
 
+<dialog class="lightbox" id="lightbox" aria-label="Enlarged screenshot">
+  <figure><img id="lightbox-img" alt=""><figcaption id="lightbox-cap"></figcaption></figure>
+  <button class="close" id="lightbox-close" type="button" aria-label="Close">×</button>
+</dialog>
+
 <script>
+(function () {
+  var box = document.getElementById('lightbox');
+  var boxImg = document.getElementById('lightbox-img');
+  var boxCap = document.getElementById('lightbox-cap');
+  document.querySelectorAll('.zoom').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var img = b.querySelector('img');
+      var cap = b.closest('figure').querySelector('figcaption');
+      boxImg.src = img.src;
+      boxImg.alt = img.alt;
+      boxCap.textContent = cap ? cap.textContent : img.alt;
+      if (box.showModal) box.showModal();
+    });
+  });
+  document.getElementById('lightbox-close').addEventListener('click', function () { box.close(); });
+  box.addEventListener('click', function (e) { if (e.target === box) box.close(); });
+
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('video[autoplay]').forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; });
+  }
+})();
 (function () {
   var clock = document.getElementById('clock');
   var fmt;
