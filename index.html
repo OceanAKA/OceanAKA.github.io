@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ocean Arbeit</title>
+<meta name="description" content="Ocean Arbeit, computer science student at the University of Hawaiʻi at Mānoa. Projects, experience and contact.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 1120px column; a hero with a "field card" of live facts, then work rows (diagram | write-up), experience as a dated list, contact. */
+:root {
+  --bg: #F2F6F5;
+  --surface: #E4ECEA;
+  --line: #C9D6D3;
+  --fg: #0F1F1C;
+  --muted: #4A5E5A;
+  --accent: #0B6762;
+  --accent-soft: #CFE6E2;
+  --warm: #B4471F;
+  --ok: #1E7A3C;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Instrument Sans", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A1514; --surface: #12211F; --line: #22403C; --fg: #E3EEEC; --muted: #9FB6B1;
+    --accent: #5CC8BC; --accent-soft: #163A36; --warm: #F08A62; --ok: #6BD38C; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A1514; --surface: #12211F; --line: #22403C; --fg: #E3EEEC; --muted: #9FB6B1;
+  --accent: #5CC8BC; --accent-soft: #163A36; --warm: #F08A62; --ok: #6BD38C; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+p { margin: 0; }
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 720px) {
+  .wrap { padding-left: max(40px, env(safe-area-inset-left, 0px)); padding-right: max(40px, env(safe-area-inset-right, 0px)); }
+}
+
+.mono { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.01em; }
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+/* Top bar */
+.top { padding-block: 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.mark { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--fg); text-decoration: none; letter-spacing: -0.02em; }
+.nav { display: flex; gap: 20px; flex-wrap: wrap; }
+.nav a { color: var(--muted); text-decoration: none; font-size: 15px; padding-block: 10px; }
+.nav a:hover { color: var(--fg); }
+
+/* Hero */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: end;
+  padding-block: 56px 72px;
+  border-bottom: 1px solid var(--line);
+}
+.hero h1 {
+  font-size: clamp(56px, 10vw, 128px);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+.hero h1 span { display: block; color: var(--accent); }
+.intro { margin-top: 28px; font-size: 20px; max-width: 34ch; color: var(--fg); }
+.intro strong { font-weight: 600; }
+.hero-links { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 18px;
+  border-radius: 999px;
+  font-weight: 600; font-size: 15px;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  color: var(--fg);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.btn:hover { border-color: var(--fg); }
+.btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn.primary:hover { background: var(--accent); border-color: var(--accent); }
+.btn svg { width: 16px; height: 16px; }
+
+.field {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  padding: 20px 22px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 18px;
+  row-gap: 12px;
+  font-size: 15px;
+}
+.field dt { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding-top: 3px; }
+.field dd { margin: 0; min-width: 0; }
+.field .sub { color: var(--muted); font-size: 13px; font-family: var(--font-mono); }
+.status { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ok); }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent); }
+#clock { font-variant-numeric: tabular-nums; }
+
+/* Sections */
+section { padding-block: 80px 24px; }
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 40px; }
+.sec-head h2 { font-size: clamp(32px, 5vw, 48px); font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+
+/* Work */
+.work { display: flex; flex-direction: column; gap: 32px; }
+.project {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.project:last-child { border-bottom: 0; }
+.figure {
+  background: var(--surface);
+  border-radius: 6px;
+  aspect-ratio: 16 / 10;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.figure svg { width: 100%; height: 100%; display: block; }
+.figure .ink { stroke: var(--fg); fill: none; }
+.figure .ink-fill { fill: var(--fg); }
+.figure .acc { stroke: var(--accent); fill: none; }
+.figure .acc-fill { fill: var(--accent); }
+.figure .warm-fill { fill: var(--warm); }
+.figure .bgfill { fill: var(--bg); }
+.figure .soft { fill: var(--accent-soft); }
+.figure .faint { stroke: var(--line); fill: none; }
+.figure text { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); letter-spacing: 0.04em; }
+
+.p-body { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.p-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pill {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+  padding: 3px 10px; border-radius: 999px;
+  border: 1px solid currentColor;
+  line-height: 1.5;
+}
+.pill.live { color: var(--ok); }
+.pill.beta { color: var(--warm); }
+.project h3 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.project .lede { font-size: 18px; max-width: 58ch; }
+.facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.facts li { padding: 12px 14px 12px 0; display: flex; flex-direction: column; gap: 2px; }
+.facts li + li { padding-left: 14px; border-left: 1px solid var(--line); }
+.facts b { font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.facts span { font-size: 13px; color: var(--muted); }
+.detail { margin: 0; padding-left: 18px; color: var(--muted); font-size: 15.5px; display: flex; flex-direction: column; gap: 4px; max-width: 64ch; }
+.stack { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); }
+.p-links { display: flex; gap: 18px; flex-wrap: wrap; font-weight: 600; font-size: 15px; }
+.p-links a { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; }
+
+/* Experience */
+.split { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 64px; }
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.timeline li { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 20px; padding-block: 20px; border-top: 1px solid var(--line); }
+.timeline li:last-child { border-bottom: 1px solid var(--line); }
+.when { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 3px; }
+.timeline h3 { font-family: var(--font-body); font-size: 18px; font-weight: 600; line-height: 1.3; }
+.timeline .org { color: var(--muted); font-size: 15px; }
+.timeline p { margin-top: 8px; font-size: 15.5px; max-width: 60ch; }
+
+.side { display: flex; flex-direction: column; gap: 40px; }
+.side h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 12px; }
+.edu p { font-size: 15.5px; }
+.edu .course { margin-top: 10px; color: var(--muted); font-size: 14.5px; }
+.skills { display: flex; flex-direction: column; gap: 16px; }
+.skills .label { margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 14px; padding: 4px 10px; border-radius: 4px; background: var(--surface); border: 1px solid var(--line); }
+
+/* Contact */
+.contact { padding-block: 96px 64px; }
+.contact-box { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 48px; align-items: end; border-top: 3px solid var(--fg); padding-top: 40px; }
+.contact h2 { font-size: clamp(40px, 7vw, 80px); font-weight: 800; letter-spacing: -0.04em; line-height: 0.95; }
+.contact p { margin-top: 18px; color: var(--muted); font-size: 18px; max-width: 40ch; }
+.reach { display: flex; flex-direction: column; gap: 0; }
+.reach-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.reach-row .val { font-size: 17px; font-weight: 500; overflow-wrap: anywhere; min-width: 0; user-select: all; }
+.copy { min-height: 36px; padding: 0 14px; font-size: 13px; }
+.copy[data-done="true"] { color: var(--ok); border-color: var(--ok); }
+
+footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+/* Motion: one load sequence, plus the scan line and stop pulse in the diagrams */
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: rise 0.7s cubic-bezier(.2,.7,.2,1) both; }
+  .rise.d1 { animation-delay: 0.08s; } .rise.d2 { animation-delay: 0.16s; } .rise.d3 { animation-delay: 0.24s; }
+  @keyframes rise { from { transform: translateY(14px); opacity: 0.001; } to { transform: none; opacity: 1; } }
+  .scan { animation: scan 2.8s ease-in-out infinite alternate; }
+  @keyframes scan { from { transform: translateY(0); } to { transform: translateY(104px); } }
+  .pulse { animation: pulse 2.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes pulse { from { transform: scale(0.6); opacity: 0.9; } to { transform: scale(2.2); opacity: 0; } }
+}
+
+@media (max-width: 860px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 40px; padding-block: 32px 56px; }
+  .project { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .split { grid-template-columns: minmax(0, 1fr); gap: 56px; }
+  .contact-box { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+}
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .intro { font-size: 18px; }
+  .facts { grid-template-columns: minmax(0, 1fr); }
+  .facts li + li { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+  .facts li { flex-direction: row; align-items: baseline; gap: 10px; }
+  .timeline li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .project h3 { font-size: 26px; }
+  section { padding-block: 64px 16px; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="#top" aria-label="Ocean Arbeit, back to top">OA</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#work">Work</a>
+      <a href="#experience">Experience</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <div class="hero" id="top">
+    <div>
+      <h1 class="rise">Ocean <span>Arbeit</span></h1>
+      <p class="intro rise d1">Computer science student at the University of Hawaiʻi at Mānoa. I build software people actually use: <strong>a Chrome extension</strong> on the Web Store, <strong>a transit alarm</strong> in beta, and <strong>a multiplayer Roblox game</strong>.</p>
+      <div class="hero-links rise d2">
+        <a class="btn primary" href="#work">See my work</a>
+        <a class="btn" href="https://github.com/OceanAKA">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+          GitHub
+        </a>
+        <a class="btn" href="https://linkedin.com/in/oceanarbeit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a>
+      </div>
+    </div>
+
+    <dl class="field rise d3" aria-label="At a glance">
+      <dt>Status</dt>
+      <dd><span class="status">Open to software internships</span></dd>
+      <dt>Based</dt>
+      <dd>Honolulu, Hawaiʻi<div class="sub">21.31° N, 157.86° W · <span id="clock">HST</span></div></dd>
+      <dt>Study</dt>
+      <dd>B.S. Computer Science, UH Mānoa<div class="sub">Sophomore · expected May 2029</div></dd>
+      <dt>Now</dt>
+      <dd>IT Help Desk, UH Mānoa<div class="sub">~100 calls and tickets a week</div></dd>
+    </dl>
+  </div>
+
+  <section id="work" aria-labelledby="work-h">
+    <div class="sec-head">
+      <h2 id="work-h">Selected work</h2>
+      <span class="label">3 projects · shipped or in testing</span>
+    </div>
+
+    <div class="work">
+      <!-- Card Price Checker -->
+      <article class="project">
+        <div class="figure" aria-hidden="true">
+          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
+            <rect x="40" y="38" width="88" height="124" rx="7" class="soft"/>
+            <rect x="40" y="38" width="88" height="124" rx="7" class="ink" stroke-width="1.5"/>
+            <rect x="50" y="50" width="68" height="48" rx="3" class="faint" stroke-width="1.5"/>
+            <line x1="50" y1="110" x2="110" y2="110" class="faint" stroke-width="3" stroke-linecap="round"/>
+            <line x1="50" y1="120" x2="96" y2="120" class="faint" stroke-width="3" stroke-linecap="round"/>
+            <path d="M30 40 v-12 h12 M126 28 h12 v12 M138 160 v12 h-12 M42 172 h-12 v-12" class="acc" stroke-width="2"/>
+            <g class="scan"><line x1="30" y1="46" x2="138" y2="46" class="acc" stroke-width="2"/></g>
+            <path d="M150 100 h22" class="ink" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <text x="180" y="54">MARKET</text>
+            <rect x="180" y="60" width="104" height="8" rx="2" class="soft"/>
+            <rect x="180" y="60" width="78" height="8" rx="2" class="acc-fill"/>
+            <text x="180" y="96">PSA · CGC · BGS</text>
+            <rect x="180" y="102" width="104" height="8" rx="2" class="soft"/>
+            <rect x="180" y="102" width="96" height="8" rx="2" class="acc-fill"/>
+            <text x="180" y="138">JAPANESE</text>
+            <rect x="180" y="144" width="104" height="8" rx="2" class="soft"/>
+            <rect x="180" y="144" width="54" height="8" rx="2" class="acc-fill"/>
+          </svg>
+        </div>
+        <div class="p-body">
+          <div class="p-top">
+            <span class="pill live">Live · Chrome Web Store</span>
+          </div>
+          <h3>Card Price Checker for Whatnot</h3>
+          <p class="lede">A Chrome extension that watches a live card break, identifies the Pokémon card on screen, and shows what it is worth before the auction ends.</p>
+          <ul class="facts">
+            <li><b>~95%</b><span>ID accuracy across 10+ stream setups</span></li>
+            <li><b>0.1–0.7 s</b><span>price lookups, with caching</span></li>
+            <li><b>84</b><span>automated tests with mocked APIs</span></li>
+          </ul>
+          <ul class="detail">
+            <li>AI vision on captured frames, on-device with Gemini Nano or through the Gemini and Claude APIs.</li>
+            <li>Merges three price sources, raw and PSA/CGC/BGS graded, in English and Japanese. Glare-resistant auto-scan.</li>
+          </ul>
+          <div class="stack mono">JavaScript · Chrome Extensions (MV3) · Gemini Nano</div>
+          <div class="p-links">
+            <a href="https://chromewebstore.google.com/detail/card-price-checker-for-wh/ipnheelahlheggemeckmlbckkbfpjboh">Install from Chrome Web Store ↗</a>
+            <a href="https://github.com/OceanAKA/WhatnotPriceChecker">Source on GitHub ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Nodoff -->
+      <article class="project">
+        <div class="figure" aria-hidden="true">
+          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
+            <path d="M24 150 C 70 150, 70 96, 116 96 S 170 140, 214 112 S 262 52, 296 52" class="faint" stroke-width="10" stroke-linecap="round"/>
+            <path d="M24 150 C 70 150, 70 96, 116 96 S 170 140, 214 112 S 262 52, 296 52" class="acc" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="24" cy="150" r="6" class="bgfill"/><circle cx="24" cy="150" r="6" class="ink" stroke-width="2"/>
+            <circle cx="72" cy="128" r="5" class="bgfill"/><circle cx="72" cy="128" r="5" class="ink" stroke-width="2"/>
+            <circle cx="116" cy="96" r="5" class="bgfill"/><circle cx="116" cy="96" r="5" class="ink" stroke-width="2"/>
+            <circle cx="166" cy="124" r="5" class="bgfill"/><circle cx="166" cy="124" r="5" class="ink" stroke-width="2"/>
+            <circle cx="252" cy="74" r="10" class="warm-fill pulse"/>
+            <circle cx="252" cy="74" r="7" class="warm-fill"/>
+            <circle cx="296" cy="52" r="5" class="bgfill"/><circle cx="296" cy="52" r="5" class="ink" stroke-width="2"/>
+            <circle cx="214" cy="112" r="8" class="ink-fill"/>
+            <text x="200" y="140">YOU</text>
+            <text x="222" y="40">YOUR STOP</text>
+            <text x="24" y="182">HONOLULU BUS · STOP ALARM</text>
+          </svg>
+        </div>
+        <div class="p-body">
+          <div class="p-top">
+            <span class="pill beta">Closed beta · TestFlight</span>
+          </div>
+          <h3>Nodoff</h3>
+          <p class="lede">A transit alarm for people who fall asleep on the bus. It tracks where you are on the route and wakes you before your stop.</p>
+          <ul class="facts">
+            <li><b>3</b><span>apps: mobile, web dashboard, API</span></li>
+            <li><b>Honolulu</b><span>bus routes mapped from open transit data</span></li>
+            <li><b>4</b><span>beta testers on TestFlight</span></li>
+          </ul>
+          <ul class="detail">
+            <li>Python API with PostGIS spatial queries to decide when you are close enough to wake.</li>
+            <li>Added silent alerts after tester feedback.</li>
+          </ul>
+          <div class="stack mono">React Native (Expo) · Next.js · FastAPI · PostgreSQL/PostGIS</div>
+          <div class="p-links">
+            <a href="https://nodoff.online">nodoff.online ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Critter Clash -->
+      <article class="project">
+        <div class="figure" aria-hidden="true">
+          <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid meet">
+            <g class="faint" stroke-width="1">
+              <rect x="40" y="30" width="240" height="140" rx="4"/>
+              <line x1="88" y1="30" x2="88" y2="170"/><line x1="136" y1="30" x2="136" y2="170"/>
+              <line x1="184" y1="30" x2="184" y2="170"/><line x1="232" y1="30" x2="232" y2="170"/>
+              <line x1="40" y1="65" x2="280" y2="65"/><line x1="40" y1="100" x2="280" y2="100"/><line x1="40" y1="135" x2="280" y2="135"/>
+            </g>
+            <circle cx="160" cy="100" r="26" class="soft"/>
+            <circle cx="160" cy="100" r="26" class="acc" stroke-width="2" stroke-dasharray="4 4"/>
+            <path d="M156 112 v-26 l14 6 l-14 6" class="ink" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="64" cy="48" r="9" class="acc" stroke-width="2"/>
+            <circle cx="256" cy="152" r="9" class="ink" stroke-width="2"/>
+            <rect x="58" y="112" width="12" height="12" rx="3" class="acc-fill"/>
+            <rect x="80" y="140" width="12" height="12" rx="3" class="acc-fill"/>
+            <rect x="106" y="76" width="12" height="12" rx="3" class="acc-fill"/>
+            <polygon points="214,40 222,54 206,54" class="warm-fill"/>
+            <polygon points="246,78 254,92 238,92" class="warm-fill"/>
+            <polygon points="204,118 212,132 196,132" class="warm-fill"/>
+            <text x="40" y="190">50 UNITS · 5 MAPS · CAPTURE POINTS</text>
+          </svg>
+        </div>
+        <div class="p-body">
+          <div class="p-top">
+            <span class="pill beta">Playable beta · Roblox</span>
+          </div>
+          <h3>Critter Clash</h3>
+          <p class="lede">A multiplayer PvP battler. Players draft critters, fight over capture points, and spend what they earn to field stronger units.</p>
+          <ul class="facts">
+            <li><b>50</b><span>unit types</span></li>
+            <li><b>5</b><span>maps</span></li>
+            <li><b>PvP + bots</b><span>with matchmaking</span></li>
+          </ul>
+          <ul class="detail">
+            <li>Game logic runs on the server so clients can't cheat.</li>
+            <li>PvE bots fill matches when there aren't enough players.</li>
+          </ul>
+          <div class="stack mono">Roblox · Luau</div>
+          <div class="p-links">
+            <a href="https://www.roblox.com/games/74973903903329/CritterClash">Play on Roblox ↗</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="experience" aria-labelledby="exp-h">
+    <div class="sec-head">
+      <h2 id="exp-h">Experience</h2>
+      <span class="label">Work, leadership, school</span>
+    </div>
+
+    <div class="split">
+      <ol class="timeline" reversed>
+        <li>
+          <div class="when">Jul 2026 – now</div>
+          <div>
+            <h3>IT Help Desk Student Assistant</h3>
+            <div class="org">University of Hawaiʻi at Mānoa</div>
+            <p>Handle about 100 calls and tickets a week on account access, network and software problems. Diagnose recurring sign-in and MFA-recovery issues and support UH systems (Lamaku, STAR) and Microsoft apps remotely.</p>
+          </div>
+        </li>
+        <li>
+          <div class="when">Jul 2026 – now</div>
+          <div>
+            <h3>Creator &amp; Affiliate Marketer</h3>
+            <div class="org">Self-employed</div>
+            <p>Grew a deals-focused TikTok account to about 5,000 followers. Built an AI video pipeline (ComfyUI, Premiere Pro) for TikTok Shop content that drove about $350 in sales in its first week.</p>
+          </div>
+        </li>
+        <li>
+          <div class="when">Jun 2025 – Feb 2026</div>
+          <div>
+            <h3>Lot Technician</h3>
+            <div class="org">Velocity, Honolulu</div>
+            <p>Moved and staged high-value exotic car inventory on a fast-paced, detail-focused team.</p>
+          </div>
+        </li>
+        <li>
+          <div class="when">Aug 2024 – May 2025</div>
+          <div>
+            <h3>Student Intern</h3>
+            <div class="org">Hawaiʻi Department of Education · Kalani High Robotics</div>
+            <p>Taught younger robotics teams programming fundamentals and robot control code. Helped run outreach sessions for Niu Valley Middle School students.</p>
+          </div>
+        </li>
+        <li>
+          <div class="when">2021 – 2025</div>
+          <div>
+            <h3>Lead Programmer</h3>
+            <div class="org">Kalani High School Robotics · FTC &amp; FRC</div>
+            <p>Four years on the programming team, leading robot software in senior year. Integrated autonomous routines with a computer-vision system that read field QR codes. 2nd at the Hawaiʻi FTC state championship; qualified for the FRC World Championship.</p>
+          </div>
+        </li>
+      </ol>
+
+      <aside class="side">
+        <div class="edu">
+          <h3>Education</h3>
+          <p><strong>University of Hawaiʻi at Mānoa</strong><br>B.S. Computer Science · expected May 2029</p>
+          <p class="course">Algorithms (ICS 311, in progress), Discrete Math (ICS 241), C/C++ (ICS 212), Data Structures in Java (ICS 211), Calculus I &amp; II</p>
+        </div>
+        <div class="skills">
+          <h3>Skills</h3>
+          <div>
+            <div class="label">Languages</div>
+            <div class="chips"><span class="chip">Python</span><span class="chip">Java</span><span class="chip">C</span><span class="chip">C++</span><span class="chip">JavaScript</span><span class="chip">SQL</span><span class="chip">Luau</span></div>
+          </div>
+          <div>
+            <div class="label">Frameworks</div>
+            <div class="chips"><span class="chip">React Native (Expo)</span><span class="chip">Next.js</span><span class="chip">FastAPI</span><span class="chip">Chrome MV3</span></div>
+          </div>
+          <div>
+            <div class="label">Tools &amp; testing</div>
+            <div class="chips"><span class="chip">PostgreSQL/PostGIS</span><span class="chip">Git</span><span class="chip">Node.js</span><span class="chip">Vercel</span><span class="chip">Mocks &amp; regression tests</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="contact" id="contact" aria-labelledby="contact-h">
+    <div class="contact-box">
+      <div>
+        <h2 id="contact-h">Let's build something.</h2>
+        <p>I'm looking for software engineering internships. Email is the fastest way to reach me.</p>
+      </div>
+      <div class="reach">
+        <div class="reach-row">
+          <span class="val" id="email">oceanarbeit@gmail.com</span>
+          <button class="btn copy" id="copy-email" type="button">Copy email</button>
+        </div>
+        <div class="reach-row">
+          <span class="label">GitHub</span>
+          <a href="https://github.com/OceanAKA">github.com/OceanAKA ↗</a>
+        </div>
+        <div class="reach-row">
+          <span class="label">LinkedIn</span>
+          <a href="https://linkedin.com/in/oceanarbeit">linkedin.com/in/oceanarbeit ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mono">
+    <span>© 2026 Ocean Arbeit</span>
+    <span>Made in Honolulu</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var clock = document.getElementById('clock');
+  var fmt;
+  try {
+    fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Pacific/Honolulu', hour: 'numeric', minute: '2-digit' });
+  } catch (e) { fmt = null; }
+  function tick() { if (fmt) clock.textContent = fmt.format(new Date()) + ' HST'; }
+  tick();
+  setInterval(tick, 30000);
+
+  var btn = document.getElementById('copy-email');
+  var email = document.getElementById('email');
+  function done(label) {
+    btn.textContent = label;
+    btn.dataset.done = 'true';
+    setTimeout(function () { btn.textContent = 'Copy email'; btn.dataset.done = 'false'; }, 2000);
+  }
+  function selectText() {
+    var r = document.createRange();
+    r.selectNodeContents(email);
+    var s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    done('Selected, press ⌘C');
+  }
+  btn.addEventListener('click', function () {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(email.textContent.trim()).then(function () { done('Copied'); }, selectText);
+    } else {
+      selectText();
+    }
+  });
+})();
+</script>
+</body>
+</html>
