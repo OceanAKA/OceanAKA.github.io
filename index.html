@@ -9,34 +9,42 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one 1120px column; a hero with a "field card" of live facts, then work rows (diagram | write-up), experience as a dated list, contact. */
+/* Layout: one 1120px column; hero over an animated sea band, work rows, experience list, contact. Theme: shoreline — pale sea-glass light theme, deep-water dark theme. */
 :root {
-  --bg: #F2F6F5;
-  --surface: #E4ECEA;
-  --line: #C9D6D3;
-  --fg: #0F1F1C;
-  --muted: #4A5E5A;
-  --accent: #0B6762;
-  --accent-soft: #CFE6E2;
-  --warm: #B4471F;
-  --ok: #1E7A3C;
+  --bg: #F2F7FA;
+  --surface: #E2EDF3;
+  --line: #C3D8E2;
+  --fg: #0B2230;
+  --muted: #45626F;
+  --accent: #096B92;
+  --accent-soft: #CFE6F0;
+  --warm: #BE4B33;
+  --ok: #0F7D5C;
+  --sea-back: rgba(9, 107, 146, 0.20);
+  --sea-front-a: #19789F;
+  --sea-front-b: #0A4E6E;
+  --foam: rgba(255, 255, 255, 0.85);
   --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --font-body: "Instrument Sans", "Helvetica Neue", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0A1514; --surface: #12211F; --line: #22403C; --fg: #E3EEEC; --muted: #9FB6B1;
-    --accent: #5CC8BC; --accent-soft: #163A36; --warm: #F08A62; --ok: #6BD38C; color-scheme: dark;
+    --bg: #06121C; --surface: #0C1F2D; --line: #1C3A4D; --fg: #DCEBF3; --muted: #92AFC0;
+    --accent: #4FC3E8; --accent-soft: #0E3345; --warm: #F2936C; --ok: #5BD6A8;
+    --sea-back: rgba(79, 195, 232, 0.13); --sea-front-a: #11425D; --sea-front-b: #081F2E; --foam: rgba(126, 206, 235, 0.55);
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0A1514; --surface: #12211F; --line: #22403C; --fg: #E3EEEC; --muted: #9FB6B1;
-  --accent: #5CC8BC; --accent-soft: #163A36; --warm: #F08A62; --ok: #6BD38C; color-scheme: dark;
+  --bg: #06121C; --surface: #0C1F2D; --line: #1C3A4D; --fg: #DCEBF3; --muted: #92AFC0;
+  --accent: #4FC3E8; --accent-soft: #0E3345; --warm: #F2936C; --ok: #5BD6A8;
+  --sea-back: rgba(79, 195, 232, 0.13); --sea-front-a: #11425D; --sea-front-b: #081F2E; --foam: rgba(126, 206, 235, 0.55);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; }
+html, body { margin: 0; overflow-x: clip; }
 html { scrollbar-width: none; }
 html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
 body {
@@ -85,8 +93,7 @@ p { margin: 0; }
   grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
   gap: 56px;
   align-items: end;
-  padding-block: 56px 72px;
-  border-bottom: 1px solid var(--line);
+  padding-block: 56px 40px;
 }
 .hero h1 {
   font-size: clamp(56px, 10vw, 128px);
@@ -133,8 +140,40 @@ p { margin: 0; }
 .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent); }
 #clock { font-variant-numeric: tabular-nums; }
 
+/* The sea: a full-bleed animated water band under the hero. Pointer strokes ripple it; a press splashes. */
+.sea {
+  position: relative;
+  height: 200px;
+  touch-action: pan-y; /* vertical scroll still works over the water on touch */
+}
+.sea canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sea .hint {
+  position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); top: 6px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); pointer-events: none;
+}
+
+/* Depth gauge: stands in for the hidden scrollbar */
+.depth {
+  position: fixed; right: 10px; top: 50%;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+  color: var(--muted);
+  opacity: 0; transition: opacity 0.4s ease;
+  pointer-events: none; z-index: 5;
+  font-variant-numeric: tabular-nums;
+}
+.depth[data-on="true"] { opacity: 0.85; }
+
+/* Wave rule between sections */
+.wave-rule { color: var(--line); height: 12px; }
+.wave-rule svg { width: 100%; height: 100%; display: block; }
+.wave-rule path { stroke: currentColor; fill: none; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+
 /* Sections */
 section { padding-block: 80px 24px; }
+#work { padding-top: 56px; }
 .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 40px; }
 .sec-head h2 { font-size: clamp(32px, 5vw, 48px); font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
 
@@ -180,11 +219,11 @@ section { padding-block: 80px 24px; }
 .zoom:hover img { transform: scale(1.03); }
 
 .lightbox { border: 0; padding: 0; background: transparent; max-width: min(1200px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: visible; }
-.lightbox::backdrop { background: rgba(5, 12, 11, 0.86); }
+.lightbox::backdrop { background: rgba(3, 12, 19, 0.88); }
 .lightbox figure { margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .lightbox img { max-width: 100%; max-height: calc(100vh - 120px); width: auto; height: auto; border-radius: 6px; display: block; }
-.lightbox figcaption { color: #E3EEEC; font-size: 15px; max-width: 70ch; text-align: center; }
-.lightbox .close { position: absolute; top: -8px; right: -8px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #E3EEEC; color: #0A1514; font-size: 22px; line-height: 1; cursor: pointer; }
+.lightbox figcaption { color: #DCEBF3; font-size: 15px; max-width: 70ch; text-align: center; }
+.lightbox .close { position: absolute; top: -8px; right: -8px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #DCEBF3; color: #06121C; font-size: 22px; line-height: 1; cursor: pointer; }
 
 .p-body { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .p-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -263,6 +302,9 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   .timeline li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .project h3 { font-size: 26px; }
   section { padding-block: 64px 16px; }
+  .sea { height: 130px; }
+  .sea .hint { display: none; }
+  .depth { right: 4px; }
   .gallery.cols-2 { grid-template-columns: minmax(0, 1fr); }
   .gallery.cols-3 { gap: 10px; }
   .gallery.cols-3 .shot .zoom { aspect-ratio: 9 / 16; }
@@ -312,7 +354,14 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       <dd>IT Help Desk, UH Mānoa<div class="sub">~100 calls and tickets a week</div></dd>
     </dl>
   </div>
+</div>
 
+<div class="sea" id="sea" aria-hidden="true">
+  <canvas id="sea-canvas"></canvas>
+  <span class="hint" id="sea-hint">Drag the water</span>
+</div>
+
+<div class="wrap">
   <section id="work" aria-labelledby="work-h">
     <div class="sec-head">
       <h2 id="work-h">Selected work</h2>
@@ -448,6 +497,8 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     </div>
   </section>
 
+  <div class="wave-rule" aria-hidden="true"><svg viewBox="0 0 1200 12" preserveAspectRatio="none"><path d="M0 6.0 Q 10 1 20 6 Q 30 11 40 6 Q 50 1 60 6 Q 70 11 80 6 Q 90 1 100 6 Q 110 11 120 6 Q 130 1 140 6 Q 150 11 160 6 Q 170 1 180 6 Q 190 11 200 6 Q 210 1 220 6 Q 230 11 240 6 Q 250 1 260 6 Q 270 11 280 6 Q 290 1 300 6 Q 310 11 320 6 Q 330 1 340 6 Q 350 11 360 6 Q 370 1 380 6 Q 390 11 400 6 Q 410 1 420 6 Q 430 11 440 6 Q 450 1 460 6 Q 470 11 480 6 Q 490 1 500 6 Q 510 11 520 6 Q 530 1 540 6 Q 550 11 560 6 Q 570 1 580 6 Q 590 11 600 6 Q 610 1 620 6 Q 630 11 640 6 Q 650 1 660 6 Q 670 11 680 6 Q 690 1 700 6 Q 710 11 720 6 Q 730 1 740 6 Q 750 11 760 6 Q 770 1 780 6 Q 790 11 800 6 Q 810 1 820 6 Q 830 11 840 6 Q 850 1 860 6 Q 870 11 880 6 Q 890 1 900 6 Q 910 11 920 6 Q 930 1 940 6 Q 950 11 960 6 Q 970 1 980 6 Q 990 11 1000 6 Q 1010 1 1020 6 Q 1030 11 1040 6 Q 1050 1 1060 6 Q 1070 11 1080 6 Q 1090 1 1100 6 Q 1110 11 1120 6 Q 1130 1 1140 6 Q 1150 11 1160 6 Q 1170 1 1180 6 Q 1190 11 1200 6"/></svg></div>
+
   <section id="experience" aria-labelledby="exp-h">
     <div class="sec-head">
       <h2 id="exp-h">Experience</h2>
@@ -548,9 +599,11 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
 
   <footer class="mono">
     <span>© 2026 Ocean Arbeit</span>
-    <span>Made in Honolulu</span>
+    <span id="floor">Made in Honolulu</span>
   </footer>
 </div>
+
+<div class="depth mono" id="depth" aria-hidden="true">▼ 0 m</div>
 
 <dialog class="lightbox" id="lightbox" aria-label="Enlarged screenshot">
   <figure><img id="lightbox-img" alt=""><figcaption id="lightbox-cap"></figcaption></figure>
@@ -611,6 +664,186 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       selectText();
     }
   });
+})();
+
+/* The water: a 1-D surface simulation (each column springs toward its
+   neighbours) riding on two slow ambient swells. Pointer strokes add
+   energy where they cross the surface; a press splashes. */
+(function () {
+  var canvas = document.getElementById('sea-canvas');
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SP = 4; // px between simulated columns
+  var W = 0, H = 0, N = 0, dpr = 1;
+  var h = [], v = [];
+  var colors = {};
+  var tNow = 0, raf = 0, inView = true, poked = false;
+
+  function readColors() {
+    var cs = getComputedStyle(document.documentElement);
+    function cv(name, fb) { var x = cs.getPropertyValue(name).trim(); return x || fb; }
+    colors = {
+      back: cv('--sea-back', 'rgba(9,107,146,0.2)'),
+      a: cv('--sea-front-a', '#19789F'),
+      b: cv('--sea-front-b', '#0A4E6E'),
+      foam: cv('--foam', 'rgba(255,255,255,0.85)')
+    };
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.max(1, Math.round(W * dpr));
+    canvas.height = Math.max(1, Math.round(H * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var n = Math.ceil(W / SP) + 2;
+    if (n !== N) { N = n; h = new Array(N).fill(0); v = new Array(N).fill(0); }
+    if (reduce) draw(0);
+  }
+
+  function step() {
+    var i;
+    for (i = 0; i < N; i++) {
+      var l = h[i > 0 ? i - 1 : i], r = h[i < N - 1 ? i + 1 : i];
+      v[i] += ((l + r) * 0.5 - h[i]) * 0.22;
+      v[i] *= 0.975;
+    }
+    for (i = 0; i < N; i++) {
+      h[i] += v[i];
+      if (h[i] > 36) h[i] = 36; else if (h[i] < -36) h[i] = -36;
+    }
+  }
+
+  function surfaceY(i, t) {
+    var x = i * SP;
+    return H * 0.52 + h[i]
+      + Math.sin(x * 0.006 + t * 0.0012) * 5
+      + Math.sin(x * 0.0145 - t * 0.0007) * 3;
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    var x, i;
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (x = 0; x <= W; x += 8) {
+      ctx.lineTo(x, H * 0.36 + Math.sin(x * 0.004 + t * 0.00045) * 9 + Math.sin(x * 0.0105 - t * 0.0003) * 5);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fillStyle = colors.back;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (i = 0; i < N; i++) ctx.lineTo(i * SP, surfaceY(i, t));
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    var g = ctx.createLinearGradient(0, H * 0.3, 0, H);
+    g.addColorStop(0, colors.a);
+    g.addColorStop(1, colors.b);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    ctx.beginPath();
+    for (i = 0; i < N; i++) {
+      var y = surfaceY(i, t);
+      if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i * SP, y);
+    }
+    ctx.strokeStyle = colors.foam;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  function loop(t) {
+    raf = 0;
+    if (!inView || document.hidden) return;
+    tNow = t;
+    step(); step();
+    draw(t);
+    raf = requestAnimationFrame(loop);
+  }
+  function play() { if (!reduce && !raf && inView && !document.hidden) raf = requestAnimationFrame(loop); }
+
+  function colAt(clientX) {
+    var rect = canvas.getBoundingClientRect();
+    return Math.round((clientX - rect.left) / SP);
+  }
+  function poke(i, amount) {
+    if (i < 1 || i > N - 2) return;
+    v[i] += amount;
+    v[i - 1] += amount * 0.55;
+    v[i + 1] += amount * 0.55;
+    if (i > 1) v[i - 2] += amount * 0.25;
+    if (i < N - 2) v[i + 2] += amount * 0.25;
+    if (!poked) {
+      poked = true;
+      var hint = document.getElementById('sea-hint');
+      if (hint) hint.style.opacity = '0';
+    }
+  }
+
+  readColors();
+  resize();
+
+  if (!reduce) {
+    var lastX = null, lastY = null;
+    canvas.addEventListener('pointermove', function (e) {
+      if (lastX !== null) {
+        var dx = e.clientX - lastX, dy = e.clientY - lastY;
+        var imp = Math.max(-5, Math.min(5, dy * 0.22)) + Math.min(3, Math.abs(dx) * 0.06);
+        if (imp !== 0) poke(colAt(e.clientX), imp);
+      }
+      lastX = e.clientX; lastY = e.clientY;
+    });
+    canvas.addEventListener('pointerleave', function () { lastX = lastY = null; });
+    canvas.addEventListener('pointerdown', function (e) { poke(colAt(e.clientX), 11); });
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        inView = entries[0].isIntersecting;
+        play();
+      }).observe(canvas);
+    }
+    document.addEventListener('visibilitychange', play);
+    play();
+  }
+
+  window.addEventListener('resize', resize);
+  var dark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function onTheme() { readColors(); if (reduce) draw(tNow); }
+  if (dark) { if (dark.addEventListener) dark.addEventListener('change', onTheme); else if (dark.addListener) dark.addListener(onTheme); }
+  if ('MutationObserver' in window) {
+    new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+})();
+
+/* Depth gauge: the hidden scrollbar, read as metres below the surface. */
+(function () {
+  var el = document.getElementById('depth');
+  var floor = document.getElementById('floor');
+  if (!el) return;
+  var ticking = false;
+  function update() {
+    ticking = false;
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - window.innerHeight;
+    if (max <= 0) { el.dataset.on = 'false'; return; }
+    var y = window.scrollY || doc.scrollTop || 0;
+    var metersMax = Math.max(30, Math.round(max / 45));
+    var m = Math.round((y / max) * metersMax);
+    var atFloor = y / max > 0.985;
+    el.textContent = atFloor ? '▼ seafloor' : '▼ ' + m + ' m';
+    el.dataset.on = y > 160 ? 'true' : 'false';
+    if (floor) floor.textContent = atFloor || y / max > 0.9 ? 'Made in Honolulu · you reached the seafloor' : 'Made in Honolulu';
+  }
+  function onScroll() {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  update();
 })();
 </script>
 </body>
