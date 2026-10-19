@@ -171,7 +171,7 @@ p { margin: 0; }
 }
 
 /* The deep: full-page layer for drops, zone animals and bioluminescence */
-#deep-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+#deep-canvas { position: absolute; top: 0; left: 0; width: 100%; z-index: -1; pointer-events: none; }
 
 /* Depth gauge: stands in for the hidden scrollbar */
 .depth {
@@ -1107,15 +1107,19 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   var kelp = [], tufts = [], kelpW = 0, kelpC = ['#2F7D5B', '#45936B'];
   var algae = [], drifters = [], ruleDoc = -999, ruleX0 = 0, ruleX1 = 0, twiTop = 0, twiBot = 0;
   var diveBubs = [], diving = false, diveCancel = null;
+  var PAD = 500, CH = 0, canvasTop = -1e9;
   var sparkColor = 'rgba(140,235,255,0.85)';
   var lastT = 0, raf = 0, idleTimer = 0, spawnIn = 2, remeasureIn = 3, now = 0;
 
   function measure() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     W = window.innerWidth; Hv = window.innerHeight;
-    if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(Hv * dpr)) {
+    CH = Hv + PAD * 2;
+    if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(CH * dpr)) {
       canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(Hv * dpr);
+      canvas.height = Math.round(CH * dpr);
+      canvas.style.height = CH + 'px';
+      canvasTop = -1e9; // force re-anchor
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var r = sea.getBoundingClientRect();
@@ -1281,6 +1285,15 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       }
     }
     ctx.globalAlpha = 1;
+  }
+
+  function ensureAnchor() {
+    var sy = window.scrollY;
+    var maxTop = Math.max(0, document.documentElement.scrollHeight - CH);
+    if (sy - 80 < canvasTop || sy + Hv + 80 > canvasTop + CH) {
+      canvasTop = Math.max(0, Math.min(maxTop, sy - PAD));
+      canvas.style.top = canvasTop + 'px';
+    }
   }
 
   function metersAt(docY) {
@@ -1606,8 +1619,10 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   }
 
   function draw() {
-    ctx.clearRect(0, 0, W, Hv);
+    ctx.clearRect(0, 0, W, CH);
     var sy = window.scrollY, i;
+    ctx.save();
+    ctx.translate(0, sy - canvasTop);
 
     ctx.fillStyle = sparkColor;
     for (i = 0; i < sparks.length; i++) {
@@ -1687,6 +1702,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   function active() {
@@ -1701,6 +1717,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     lastT = t;
     remeasureIn -= dt;
     if (remeasureIn <= 0) { remeasureIn = 3; measure(); }
+    ensureAnchor();
     update(dt);
     draw();
     if (active()) raf = requestAnimationFrame(loop);
@@ -1725,7 +1742,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   measure();
   window.addEventListener('resize', function () { measure(); });
   document.addEventListener('visibilitychange', function () { if (!document.hidden) wake(); });
-  window.addEventListener('scroll', function () { wake(); }, { passive: true });
+  window.addEventListener('scroll', function () { if (!raf) ensureAnchor(); wake(); }, { passive: true });
 
   var dark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   if (dark) {
