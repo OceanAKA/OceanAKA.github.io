@@ -772,12 +772,14 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     var i;
     for (i = 0; i < N; i++) {
       var l = h[i > 0 ? i - 1 : i], r = h[i < N - 1 ? i + 1 : i];
-      v[i] += ((l + r) * 0.5 - h[i]) * 0.22;
+      v[i] += ((l + r) * 0.5 - h[i]) * 0.22; // neighbour tension
+      v[i] += -h[i] * 0.018; // gravity: pull back to rest level
       v[i] *= 0.975;
     }
     for (i = 0; i < N; i++) {
       h[i] += v[i];
-      if (h[i] > 36) h[i] = 36; else if (h[i] < -36) h[i] = -36;
+      if (h[i] > 34) { h[i] = 34; v[i] *= 0.4; }
+      else if (h[i] < -34) { h[i] = -34; v[i] *= 0.4; }
     }
   }
 
@@ -999,7 +1001,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     canvas.addEventListener('pointermove', function (e) {
       if (lastX !== null) {
         var dx = e.clientX - lastX, dy = e.clientY - lastY;
-        var imp = Math.max(-5, Math.min(5, dy * 0.22)) + Math.min(3, Math.abs(dx) * 0.06);
+        var imp = Math.max(-4, Math.min(4, dy * 0.18)) + (Math.random() - 0.5) * Math.min(3, Math.abs(dx) * 0.12);
         if (imp !== 0) poke(colAt(e.clientX), imp);
       }
       lastX = e.clientX; lastY = e.clientY;
@@ -1027,6 +1029,11 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
 
   // Hooks for the page-wide deep layer below
   window.__sea = {
+    calm: function () {
+      var m = 0, mx = 0, i;
+      for (i = 0; i < N; i++) { m += h[i]; if (Math.abs(h[i]) > mx) mx = Math.abs(h[i]); }
+      return { mean: +(m / N).toFixed(2), max: +mx.toFixed(2) };
+    },
     visible: function () {
       var r = canvas.getBoundingClientRect();
       return r.bottom > -40 && r.top < window.innerHeight + 40;
@@ -1078,6 +1085,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   var W = 0, Hv = 0, dpr = 1, waterDoc = 0, floorDoc = 0;
   var objs = [], animals = [], fx = [], sparks = [];
   var kelp = [], tufts = [], kelpW = 0, kelpC = ['#2F7D5B', '#45936B'];
+  var algae = [], drifters = [], ruleDoc = -999, ruleX0 = 0, ruleX1 = 0, twiTop = 0, twiBot = 0;
   var sparkColor = 'rgba(140,235,255,0.85)';
   var lastT = 0, raf = 0, idleTimer = 0, spawnIn = 2, remeasureIn = 3, now = 0;
 
@@ -1098,6 +1106,15 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       (cs.getPropertyValue('--kelp-1') || '').trim() || kelpC[0],
       (cs.getPropertyValue('--kelp-2') || '').trim() || kelpC[1]
     ];
+    var rule = document.querySelector('.wave-rule');
+    if (rule) {
+      var rr = rule.getBoundingClientRect();
+      ruleDoc = rr.top + window.scrollY + rr.height;
+      ruleX0 = rr.left; ruleX1 = rr.right;
+    }
+    var scrollMax = Math.max(1, document.documentElement.scrollHeight - Hv);
+    twiTop = Math.max(waterDoc + 140, Hv / 2 + (240 / 1050) * scrollMax);
+    twiBot = Hv / 2 + (940 / 1050) * scrollMax;
     if (!kelp.length || Math.abs(kelpW - W) > 90) buildKelp();
   }
 
@@ -1121,6 +1138,69 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     for (i = 0; i < m; i++) {
       tufts.push({ x: Math.random() * W, h: 8 + Math.random() * 18, blades: 3 + ((Math.random() * 3) | 0), ph: Math.random() * 6.28, c: (Math.random() * 2) | 0 });
     }
+    // algae patches rooted on the wave rule, and sargassum clumps adrift
+    // in the twilight band
+    algae = []; drifters = [];
+    var span = Math.max(60, ruleX1 - ruleX0);
+    n = Math.max(6, Math.round(span / 85));
+    for (i = 0; i < n; i++) {
+      algae.push({
+        x: ruleX0 + Math.random() * span,
+        h: 9 + Math.random() * 17,
+        blades: 4 + ((Math.random() * 4) | 0),
+        ph: Math.random() * 6.28,
+        c: (Math.random() * 2) | 0
+      });
+    }
+    for (i = 0; i < 6; i++) {
+      var blobs = [], bn = 5 + ((Math.random() * 5) | 0), br = 7 + Math.random() * 9, k2;
+      for (k2 = 0; k2 < bn; k2++) {
+        blobs.push({ dx: (Math.random() - 0.5) * br * 2.4, dy: (Math.random() - 0.5) * br * 1.4, r: 2 + Math.random() * 3.5 });
+      }
+      drifters.push({ x: Math.random() * W, f: Math.random(), dir: Math.random() < 0.5 ? -1 : 1, sp: 4 + Math.random() * 8, ph: Math.random() * 6.28, blobs: blobs, c: (Math.random() * 2) | 0 });
+    }
+  }
+
+  function algaeOnScreen() {
+    var sy = window.scrollY;
+    return (ruleDoc > sy - 40 && ruleDoc - 40 < sy + Hv) || (twiBot > sy && twiTop < sy + Hv);
+  }
+
+  function drawAlgae(sy) {
+    var i, sgm;
+    var ry = ruleDoc - sy;
+    if (ry > -40 && ry < Hv + 40) {
+      ctx.lineCap = 'round';
+      for (i = 0; i < algae.length; i++) {
+        var a = algae[i];
+        ctx.strokeStyle = kelpC[a.c];
+        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = 1.3;
+        for (sgm = 0; sgm < a.blades; sgm++) {
+          var spread = (sgm - (a.blades - 1) / 2) * 3.4;
+          var sw = Math.sin(now * 0.0012 + a.ph + sgm * 1.3) * 2.5;
+          ctx.beginPath();
+          ctx.moveTo(a.x + spread * 0.3, ry + 2);
+          ctx.quadraticCurveTo(a.x + spread * 0.7 + sw * 0.5, ry - a.h * 0.55, a.x + spread + sw, ry - a.h);
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+    for (i = 0; i < drifters.length; i++) {
+      var d = drifters[i];
+      var dy = twiTop + d.f * (twiBot - twiTop) - sy + Math.sin(now * 0.0008 + d.ph) * 10;
+      if (dy < -40 || dy > Hv + 40) continue;
+      ctx.fillStyle = kelpC[d.c];
+      ctx.globalAlpha = 0.3;
+      for (sgm = 0; sgm < d.blobs.length; sgm++) {
+        var bl = d.blobs[sgm];
+        ctx.beginPath();
+        ctx.arc(d.x + bl.dx, dy + bl.dy + Math.sin(now * 0.001 + sgm) * 1.5, bl.r, 0, 6.2832);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   function kelpOnScreen() {
@@ -1369,6 +1449,12 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       if (a.x < -80 || a.x > W + 80) animals.splice(i, 1);
     }
 
+    for (i = 0; i < drifters.length; i++) {
+      var dr = drifters[i];
+      dr.x += dr.dir * dr.sp * dt;
+      if (dr.x < -30) dr.x = W + 28; else if (dr.x > W + 30) dr.x = -28;
+    }
+
     for (i = fx.length - 1; i >= 0; i--) {
       var f = fx[i];
       f.t += dt;
@@ -1460,6 +1546,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     ctx.globalAlpha = 1;
 
     drawKelp(sy);
+    drawAlgae(sy);
 
     for (i = 0; i < animals.length; i++) {
       var a = animals[i];
@@ -1508,7 +1595,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   }
 
   function active() {
-    return objs.length > 0 || animals.length > 0 || fx.length > 0 || sparks.length > 0 || viewMeters() >= 420 || kelpOnScreen();
+    return objs.length > 0 || animals.length > 0 || fx.length > 0 || sparks.length > 0 || viewMeters() >= 420 || kelpOnScreen() || algaeOnScreen();
   }
 
   function loop(t) {
