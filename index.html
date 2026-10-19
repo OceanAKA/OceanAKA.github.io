@@ -698,7 +698,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var SP = 4; // px between simulated columns
   var W = 0, H = 0, N = 0, dpr = 1;
-  var h = [], v = [];
+  var h = [], v = [], hs = [];
   var colors = {};
   var tNow = 0, lastT = 0, raf = 0, inView = true, poked = false;
 
@@ -763,7 +763,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     canvas.height = Math.max(1, Math.round(H * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var n = Math.ceil(W / SP) + 2;
-    if (n !== N) { N = n; h = new Array(N).fill(0); v = new Array(N).fill(0); }
+    if (n !== N) { N = n; h = new Array(N).fill(0); v = new Array(N).fill(0); hs = new Array(N).fill(0); }
     if (!swimmers.length) initSwimmers();
     if (reduce) draw(0);
   }
@@ -781,6 +781,12 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       if (h[i] > 34) { h[i] = 34; v[i] *= 0.4; }
       else if (h[i] < -34) { h[i] = -34; v[i] *= 0.4; }
     }
+    // spatial smoothing: narrow spikes round off into soft mounds
+    for (i = 0; i < N; i++) {
+      var ls = h[i > 0 ? i - 1 : i], rs = h[i < N - 1 ? i + 1 : i];
+      hs[i] = h[i] * 0.6 + (ls + rs) * 0.2;
+    }
+    var swap = h; h = hs; hs = swap;
   }
 
   function surfaceY(i, t) {
@@ -795,12 +801,13 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   }
 
   function poke(i, amount) {
-    if (i < 1 || i > N - 2) return;
-    v[i] += amount;
-    v[i - 1] += amount * 0.55;
-    v[i + 1] += amount * 0.55;
-    if (i > 1) v[i - 2] += amount * 0.25;
-    if (i < N - 2) v[i + 2] += amount * 0.25;
+    if (i < 0 || i > N - 1) return;
+    for (var k = -6; k <= 6; k++) {
+      var j = i + k;
+      if (j < 1 || j > N - 2) continue;
+      var w = Math.cos((k / 6.5) * Math.PI / 2);
+      v[j] += amount * 0.32 * w * w;
+    }
     if (!poked) {
       poked = true;
       var hint = document.getElementById('sea-hint');
@@ -879,11 +886,25 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     }
   }
 
+  function surfaceTo(t, startWithMove) {
+    // curve through midpoints so the surface renders without corners
+    var y0 = surfaceY(0, t);
+    if (startWithMove) ctx.moveTo(0, y0); else ctx.lineTo(0, y0);
+    var px = 0, py = y0;
+    for (var i = 1; i < N; i++) {
+      var x = i * SP, y = surfaceY(i, t);
+      ctx.quadraticCurveTo(px, py, (px + x) / 2, (py + y) / 2);
+      px = x; py = y;
+    }
+    ctx.lineTo(px, py);
+    return px;
+  }
+
   function tracePath(t) {
     ctx.beginPath();
     ctx.moveTo(0, H);
-    for (var i = 0; i < N; i++) ctx.lineTo(i * SP, surfaceY(i, t));
-    ctx.lineTo(W, H);
+    var lastX = surfaceTo(t, false);
+    ctx.lineTo(lastX, H);
     ctx.closePath();
   }
 
@@ -944,10 +965,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     ctx.restore();
     // foam line
     ctx.beginPath();
-    for (i = 0; i < N; i++) {
-      var yF = surfaceY(i, t);
-      if (i === 0) ctx.moveTo(0, yF); else ctx.lineTo(i * SP, yF);
-    }
+    surfaceTo(t, true);
     ctx.strokeStyle = colors.foam;
     ctx.lineWidth = 1.5;
     ctx.stroke();
