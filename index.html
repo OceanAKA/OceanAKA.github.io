@@ -817,11 +817,13 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
 
   function splash(x, y, power) {
     poke(Math.round(x / SP), power);
-    var n = 6 + Math.round(power);
-    for (var k = 0; k < n && spray.length < 90; k++) {
+    var n = 4 + Math.round(power * 1.4);
+    for (var k = 0; k < n && spray.length < 110; k++) {
       var a = -Math.PI / 2 + (Math.random() - 0.5) * 1.7;
-      var sp = (55 + Math.random() * 150) * (0.4 + power / 14);
-      spray.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.45 + Math.random() * 0.4 });
+      var sp = (45 + Math.random() * 130) * (0.35 + power / 11);
+      spray.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+        r: 1.2 + Math.random() + power * 0.05,
+        life: 0.4 + Math.random() * 0.4 + power * 0.012 });
     }
   }
 
@@ -835,7 +837,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       e: DROP_POOL[Math.floor(Math.random() * DROP_POOL.length)],
       x: x,
       y: below ? surf - 6 : y,
-      vy: 30,
+      vy: 5,
       size: 19 + Math.random() * 8,
       rot: (Math.random() - 0.5) * 0.5,
       state: below ? 'float' : 'fall',
@@ -863,7 +865,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
         if (d.y >= surf - 4) {
           d.y = surf - 4;
           d.state = 'float';
-          splash(d.x, surf, Math.min(13, 4 + d.vy * 0.018));
+          splash(d.x, surf, Math.min(22, 2.5 + d.vy * 0.02));
         }
       } else if (d.state === 'float') {
         d.floatT += dt;
@@ -982,7 +984,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       var pS = spray[i];
       ctx.globalAlpha = Math.max(0, Math.min(1, pS.life * 2));
       ctx.beginPath();
-      ctx.arc(pS.x, pS.y, 1.8, 0, 6.2832);
+      ctx.arc(pS.x, pS.y, pS.r || 1.8, 0, 6.2832);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -1413,7 +1415,8 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       var b = objs[i];
       if (b !== o && Math.abs(b.x - o.x) < 170 && Math.abs(b.y - o.y) < 170) b.vy -= 150;
     }
-    if (Math.abs(o.y - waterDoc) < 320 && window.__sea) window.__sea.splash(o.x, 13);
+    var prox = 1 - Math.abs(o.y - waterDoc) / 340;
+    if (prox > 0 && window.__sea) window.__sea.splash(o.x, 8 + 14 * prox);
   }
 
   function pop(o) {
@@ -1428,9 +1431,9 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     objs.push({ e: '👻', cat: 'ghost', state: 'ghost', x: o.x, y: o.y, vx: 0, vy: -55, size: 21, rot: 0, t: 0, alpha: 1 });
   }
 
-  function reachSurface(o) {
+  function reachSurface(o, quiet) {
     if (window.__sea) {
-      if (window.__sea.visible()) window.__sea.splash(o.x, 6);
+      if (!quiet && window.__sea.visible()) window.__sea.splash(o.x, 6);
       if (o.e === '🎈') return false; // balloons burst free instead
       window.__sea.dropAt(o.x, o.e);
     }
@@ -1449,9 +1452,11 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
           if (o.e === '🎈' && o.y - window.scrollY < -140) { objs.splice(i, 1); break; }
           if (o.vy > 0 && o.y >= waterDoc - 4) {
             o.y = waterDoc - 4;
-            if (window.__sea && window.__sea.visible()) window.__sea.splash(o.x, Math.min(13, 4 + o.vy * 0.018));
+            var impact = Math.min(22, 2.5 + o.vy * 0.02);
+            if (window.__sea && window.__sea.visible()) window.__sea.splash(o.x, impact);
+            bubblesAt(o.x, o.y, Math.round(2 + impact * 0.5), impact > 14);
             if (o.cat === 'float') {
-              if (reachSurface(o)) objs.splice(i, 1);
+              if (reachSurface(o, true)) objs.splice(i, 1);
             } else enterWater(o);
           }
           break;
