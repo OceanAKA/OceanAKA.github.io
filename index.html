@@ -1104,6 +1104,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   var objs = [], animals = [], fx = [], sparks = [];
   var kelp = [], tufts = [], kelpW = 0, kelpC = ['#2F7D5B', '#45936B'];
   var algae = [], drifters = [], ruleDoc = -999, ruleX0 = 0, ruleX1 = 0, twiTop = 0, twiBot = 0;
+  var diveBubs = [], diving = false, diveCancel = null;
   var sparkColor = 'rgba(140,235,255,0.85)';
   var lastT = 0, raf = 0, idleTimer = 0, spawnIn = 2, remeasureIn = 3, now = 0;
 
@@ -1324,6 +1325,55 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
     o.t = 0;
   }
 
+  function easeDive(u) {
+    return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  }
+
+  function dive(targetY, hash) {
+    if (diveCancel) diveCancel();
+    var startY = window.scrollY;
+    var maxY = document.documentElement.scrollHeight - Hv;
+    var endY = Math.max(0, Math.min(maxY, targetY));
+    var dist = Math.abs(endY - startY);
+    if (dist < 4) return;
+    var dur = Math.min(2100, 500 + dist * 0.45);
+    var t0 = performance.now(), cancelled = false, lastY = startY;
+    function cancel() { cancelled = true; diving = false; }
+    diveCancel = cancel;
+    window.addEventListener('wheel', cancel, { once: true, passive: true });
+    window.addEventListener('touchstart', cancel, { once: true, passive: true });
+    diving = true;
+    function stepDive(tn) {
+      if (cancelled) return;
+      var u = Math.min(1, (tn - t0) / dur);
+      var y = startY + (endY - startY) * easeDive(u);
+      window.scrollTo(0, y);
+      // bubbles stream past, more the faster we move
+      var speed = Math.abs(y - lastY);
+      lastY = y;
+      var n = Math.min(6, Math.round(speed * 0.14));
+      for (var k = 0; k < n && diveBubs.length < 90; k++) {
+        diveBubs.push({
+          x: Math.random() * W,
+          y: Hv + 12 + Math.random() * 60,
+          vy: -(280 + Math.random() * 430),
+          r: 1.6 + Math.random() * 3.6,
+          ph: Math.random() * 6.28,
+          life: 0.8 + Math.random() * 0.8,
+          t: 0
+        });
+      }
+      if (u < 1) requestAnimationFrame(stepDive);
+      else {
+        diving = false;
+        if (hash) { try { history.replaceState(null, '', hash); } catch (err) {} }
+      }
+      wake();
+    }
+    requestAnimationFrame(stepDive);
+    wake();
+  }
+
   function spawnObject(cx, cy, forceCat) {
     var r = Math.random(), e, cat;
     cat = forceCat || (r < 0.38 ? 'float' : r < 0.72 ? 'sink' : r < 0.9 ? 'human' : 'boom');
@@ -1465,6 +1515,14 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
       var a = animals[i];
       a.x += a.dir * a.sp * dt;
       if (a.x < -80 || a.x > W + 80) animals.splice(i, 1);
+    }
+
+    for (i = diveBubs.length - 1; i >= 0; i--) {
+      var db = diveBubs[i];
+      db.t += dt;
+      db.y += db.vy * dt;
+      db.x += Math.sin(now * 0.004 + db.ph) * 26 * dt;
+      if (db.t >= db.life || db.y < -14) diveBubs.splice(i, 1);
     }
 
     for (i = 0; i < drifters.length; i++) {
@@ -1609,11 +1667,25 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
         drawEmoji('💥', f.x, fy, f.size * (1 + (1 - k) * 0.7), false, 0, k);
       }
     }
+    ctx.strokeStyle = sparkColor;
+    ctx.lineWidth = 1.2;
+    for (i = 0; i < diveBubs.length; i++) {
+      var db = diveBubs[i];
+      var kb = 1 - db.t / db.life;
+      ctx.globalAlpha = Math.max(0, kb) * 0.75;
+      ctx.beginPath();
+      ctx.arc(db.x, db.y, db.r, 0, 6.2832);
+      ctx.stroke();
+      ctx.globalAlpha = Math.max(0, kb) * 0.25;
+      ctx.beginPath();
+      ctx.arc(db.x, db.y, db.r, 0, 6.2832);
+      ctx.fill();
+    }
     ctx.globalAlpha = 1;
   }
 
   function active() {
-    return objs.length > 0 || animals.length > 0 || fx.length > 0 || sparks.length > 0 || viewMeters() >= 420 || kelpOnScreen() || algaeOnScreen();
+    return objs.length > 0 || animals.length > 0 || fx.length > 0 || sparks.length > 0 || viewMeters() >= 420 || kelpOnScreen() || algaeOnScreen() || diving || diveBubs.length > 0;
   }
 
   function loop(t) {
@@ -1660,6 +1732,17 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   }
 
   document.addEventListener('click', function (e) {
+    var anchor = e.target && e.target.closest && e.target.closest('a[href^="#"]');
+    if (anchor) {
+      var id = anchor.getAttribute('href').slice(1);
+      var el = id && document.getElementById(id);
+      if (el) {
+        e.preventDefault();
+        var target = id === 'top' ? 0 : el.getBoundingClientRect().top + window.scrollY - 24;
+        dive(target, '#' + id);
+      }
+      return;
+    }
     if (e.defaultPrevented) return;
     if (e.target && e.target.closest && e.target.closest('a,button,input,select,textarea,video,dialog,label')) return;
     if (e.target && e.target.id === 'sea-canvas') return;
