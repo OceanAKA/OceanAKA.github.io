@@ -21,6 +21,7 @@
   --warm: #BE4B33;
   --ok: #0F7D5C;
   --bg-deep: #C8DCEA;
+  --spark: rgba(10, 90, 130, 0.6);
   --sea-back: rgba(9, 107, 146, 0.20);
   --sea-front-a: #19789F;
   --sea-front-b: #0A4E6E;
@@ -34,6 +35,7 @@
     --bg: #06121C; --surface: #0C1F2D; --line: #1C3A4D; --fg: #DCEBF3; --muted: #92AFC0;
     --accent: #4FC3E8; --accent-soft: #0E3345; --warm: #F2936C; --ok: #5BD6A8;
     --bg-deep: #01060C;
+    --spark: rgba(140, 235, 255, 0.85);
     --sea-back: rgba(79, 195, 232, 0.13); --sea-front-a: #11425D; --sea-front-b: #081F2E; --foam: rgba(126, 206, 235, 0.55);
     color-scheme: dark;
   }
@@ -42,6 +44,7 @@
   --bg: #06121C; --surface: #0C1F2D; --line: #1C3A4D; --fg: #DCEBF3; --muted: #92AFC0;
   --accent: #4FC3E8; --accent-soft: #0E3345; --warm: #F2936C; --ok: #5BD6A8;
   --bg-deep: #01060C;
+  --spark: rgba(140, 235, 255, 0.85);
   --sea-back: rgba(79, 195, 232, 0.13); --sea-front-a: #11425D; --sea-front-b: #081F2E; --foam: rgba(126, 206, 235, 0.55);
   color-scheme: dark;
 }
@@ -160,6 +163,9 @@ p { margin: 0; }
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--muted); pointer-events: none;
 }
+
+/* The deep: full-page layer for drops, zone animals and bioluminescence */
+#deep-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 
 /* Depth gauge: stands in for the hidden scrollbar */
 .depth {
@@ -366,7 +372,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
 
 <div class="sea" id="sea" aria-hidden="true">
   <canvas id="sea-canvas"></canvas>
-  <span class="hint" id="sea-hint">Drag the water · click to drop something in</span>
+  <span class="hint" id="sea-hint">Drag the water · click anywhere to drop something in</span>
 </div>
 
 <div class="wrap">
@@ -991,6 +997,457 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   if ('MutationObserver' in window) {
     new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   }
+
+  // Hooks for the page-wide deep layer below
+  window.__sea = {
+    visible: function () {
+      var r = canvas.getBoundingClientRect();
+      return r.bottom > -40 && r.top < window.innerHeight + 40;
+    },
+    splash: function (clientX, power) {
+      var r = canvas.getBoundingClientRect();
+      var x = Math.max(4, Math.min(W - 4, clientX - r.left));
+      splash(x, surfAt(x, tNow), power);
+    },
+    dropAt: function (clientX, e) {
+      var r = canvas.getBoundingClientRect();
+      var x = Math.max(8, Math.min(W - 8, clientX - r.left));
+      drops.push({ e: e, x: x, y: surfAt(x, tNow) - 6, vy: 0, size: 20 + Math.random() * 6, rot: (Math.random() - 0.5) * 0.5, state: 'float', floatT: 0, alpha: 1 });
+      if (drops.length > 10) drops.shift();
+    }
+  };
+})();
+
+/* The deep: a fixed page-wide layer behind the content. Click anywhere
+   to drop something in. What happens depends on the object and the
+   depth: floaters rise to the surface, sinkers settle on the seafloor,
+   explosives go off, inflatables implode under midnight-zone pressure,
+   and a person can only swim back up from the sunlight zone. Zone
+   animals cruise past at their own depths, and bioluminescent specks
+   drift up from the deep. */
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var sea = document.getElementById('sea');
+  if (reduce || !sea) return;
+  var canvas = document.createElement('canvas');
+  canvas.id = 'deep-canvas';
+  canvas.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  var EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  var FLOATERS = ['🥥', '🍍', '🛟', '🦆', '🧋', '🏐', '⚽', '🏀', '🎈'];
+  var SINKERS = ['⚓', '🪨', '🎳', '📦', '👟', '🎲', '📱', '🐚', '🗿', '🔑'];
+  var HUMANS = ['🧍', '🏊', '🤿'];
+  var BOOMS = ['🧨', '💣'];
+  var INFLATABLE = { '🎈': 1, '🏐': 1, '⚽': 1, '🏀': 1, '🛟': 1 };
+  var ZONE_ANIMALS = {
+    sun: ['🐠', '🐟', '🐢', '🐬', '🐳'],
+    twi: ['🦈', '🐙', '🦑', '🐡', '🪼'],
+    mid: ['🦑', '🪼', '🦐', '🐍']
+  };
+
+  var W = 0, Hv = 0, dpr = 1, waterDoc = 0, floorDoc = 0;
+  var objs = [], animals = [], fx = [], sparks = [];
+  var sparkColor = 'rgba(140,235,255,0.85)';
+  var lastT = 0, raf = 0, idleTimer = 0, spawnIn = 2, remeasureIn = 3, now = 0;
+
+  function measure() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; Hv = window.innerHeight;
+    if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(Hv * dpr)) {
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(Hv * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var r = sea.getBoundingClientRect();
+    waterDoc = r.top + window.scrollY + r.height * 0.52;
+    floorDoc = document.documentElement.scrollHeight - 26;
+    var cs = getComputedStyle(document.documentElement);
+    sparkColor = (cs.getPropertyValue('--spark') || '').trim() || sparkColor;
+  }
+
+  function metersAt(docY) {
+    // same scale as the depth gauge: the metres it reads when this
+    // point sits at the centre of the screen
+    var max = document.documentElement.scrollHeight - Hv;
+    var f = (docY - Hv / 2) / Math.max(1, max);
+    return Math.max(0, Math.min(1, f)) * 1050;
+  }
+  function zoneAt(docY) {
+    var m = metersAt(docY);
+    return m < 200 ? 'sun' : m < 1000 ? 'twi' : 'mid';
+  }
+  function viewMeters() {
+    var max = document.documentElement.scrollHeight - Hv;
+    return max > 0 ? (window.scrollY / max) * 1050 : 0;
+  }
+
+  function addFx(f) { if (fx.length < 120) fx.push(f); }
+  function bubblesAt(x, y, n, fast) {
+    for (var k = 0; k < n; k++) {
+      addFx({ type: 'bub', x: x + (Math.random() - 0.5) * 16, y: y + (Math.random() - 0.5) * 10,
+        vx: fast ? (Math.random() - 0.5) * 160 : (Math.random() - 0.5) * 20,
+        vy: -(30 + Math.random() * (fast ? 160 : 60)),
+        r: 1.3 + Math.random() * 2, life: 0.8 + Math.random() * 0.6, t: 0 });
+    }
+  }
+
+  function crushNow(o) {
+    var m = metersAt(o.y);
+    return o.e === '🎈' ? m >= 200 : m >= 1000;
+  }
+
+  function enterWater(o) {
+    bubblesAt(o.x, o.y, 5);
+    if (o.cat === 'float') o.state = (INFLATABLE[o.e] && crushNow(o)) ? 'crush' : 'rise';
+    else if (o.cat === 'sink') o.state = 'sinking';
+    else if (o.cat === 'boom') o.state = 'fuse';
+    else {
+      var z = zoneAt(o.y);
+      if (z === 'sun') o.state = 'swim';
+      else { o.state = 'struggle'; o.doom = z === 'mid'; }
+    }
+    o.t = 0;
+  }
+
+  function spawnObject(cx, cy, forceCat) {
+    var r = Math.random(), e, cat;
+    cat = forceCat || (r < 0.38 ? 'float' : r < 0.72 ? 'sink' : r < 0.9 ? 'human' : 'boom');
+    var pool = cat === 'float' ? FLOATERS : cat === 'sink' ? SINKERS : cat === 'human' ? HUMANS : BOOMS;
+    e = pool[(Math.random() * pool.length) | 0];
+    var o = {
+      e: e, cat: cat,
+      x: Math.max(12, Math.min(W - 12, cx)),
+      y: cy + window.scrollY,
+      vx: 0, vy: 0,
+      size: e === '🗿' ? 34 : e === '🐳' ? 30 : 20 + Math.random() * 8,
+      rot: (Math.random() - 0.5) * 0.4, t: 0, alpha: 1, doom: false,
+      state: 'air'
+    };
+    if (o.y >= waterDoc) enterWater(o);
+    objs.push(o);
+    if (objs.length > 16) objs.shift();
+    wake();
+    return o;
+  }
+
+  function explode(o) {
+    addFx({ type: 'flash', x: o.x, y: o.y, size: 54, life: 0.4, t: 0 });
+    addFx({ type: 'ring', x: o.x, y: o.y, r: 6, vr: 260, life: 0.55, t: 0 });
+    bubblesAt(o.x, o.y, 22, true);
+    var i;
+    for (i = 0; i < animals.length; i++) {
+      var a = animals[i];
+      var dx = a.x - o.x, dy = (a.y - o.y);
+      if (dx * dx + dy * dy < 260 * 260) {
+        a.dir = dx >= 0 ? 1 : -1;
+        a.sp = 160 + Math.random() * 80;
+        a.flee = true;
+      }
+    }
+    for (i = 0; i < objs.length; i++) {
+      var b = objs[i];
+      if (b !== o && Math.abs(b.x - o.x) < 170 && Math.abs(b.y - o.y) < 170) b.vy -= 150;
+    }
+    if (Math.abs(o.y - waterDoc) < 320 && window.__sea) window.__sea.splash(o.x, 13);
+  }
+
+  function pop(o) {
+    addFx({ type: 'flash', x: o.x, y: o.y, size: o.size * 1.7, life: 0.32, t: 0 });
+    addFx({ type: 'ring', x: o.x, y: o.y, r: 4, vr: 150, life: 0.4, t: 0 });
+    bubblesAt(o.x, o.y, 12, true);
+  }
+
+  function die(o) {
+    bubblesAt(o.x, o.y, 8);
+    objs.push({ e: '💀', cat: 'sink', state: 'sinking', x: o.x, y: o.y, vx: 0, vy: 10, size: 19, rot: 0, t: 0, alpha: 1 });
+    objs.push({ e: '👻', cat: 'ghost', state: 'ghost', x: o.x, y: o.y, vx: 0, vy: -55, size: 21, rot: 0, t: 0, alpha: 1 });
+  }
+
+  function reachSurface(o) {
+    if (window.__sea) {
+      if (window.__sea.visible()) window.__sea.splash(o.x, 6);
+      if (o.e === '🎈') return false; // balloons burst free instead
+      window.__sea.dropAt(o.x, o.e);
+    }
+    return true;
+  }
+
+  function update(dt) {
+    var i;
+    for (i = objs.length - 1; i >= 0; i--) {
+      var o = objs[i];
+      o.t += dt;
+      switch (o.state) {
+        case 'air':
+          o.vy += (o.e === '🎈' ? -520 : 900) * dt;
+          o.y += o.vy * dt;
+          if (o.e === '🎈' && o.y - window.scrollY < -140) { objs.splice(i, 1); break; }
+          if (o.vy > 0 && o.y >= waterDoc - 4) {
+            o.y = waterDoc - 4;
+            if (window.__sea && window.__sea.visible()) window.__sea.splash(o.x, Math.min(13, 4 + o.vy * 0.018));
+            if (o.cat === 'float') {
+              if (reachSurface(o)) objs.splice(i, 1);
+            } else enterWater(o);
+          }
+          break;
+        case 'rise':
+          o.vy = Math.max(o.vy - 500 * dt, -130);
+          o.y += o.vy * dt;
+          o.x += Math.sin(now * 0.004 + o.rot * 10) * 14 * dt;
+          if (Math.random() < dt * 2) bubblesAt(o.x, o.y + o.size * 0.4, 1);
+          if (o.y <= waterDoc + 6) {
+            if (o.e === '🎈') { o.state = 'air'; o.vy = -170; if (window.__sea && window.__sea.visible()) window.__sea.splash(o.x, 5); }
+            else if (reachSurface(o)) objs.splice(i, 1);
+          }
+          break;
+        case 'sinking':
+          o.vy = Math.min(o.vy + 420 * dt, o.e === '🗿' ? 230 : 110);
+          o.y += o.vy * dt;
+          o.x += Math.sin(now * 0.003 + o.rot * 8) * 10 * dt;
+          o.rot += 0.3 * dt;
+          if (Math.random() < dt * 1.2) bubblesAt(o.x, o.y, 1);
+          if (o.y >= floorDoc - o.size * 0.4) {
+            o.y = floorDoc - o.size * 0.4;
+            o.state = 'rest';
+            o.t = 0;
+            bubblesAt(o.x, o.y, o.e === '🗿' ? 10 : 4);
+          }
+          break;
+        case 'rest':
+          if (o.t > 10) { o.alpha -= 0.6 * dt; if (o.alpha <= 0) objs.splice(i, 1); }
+          break;
+        case 'swim':
+          o.y += Math.sin(now * 0.005 + o.rot * 9) * 8 * dt;
+          o.x += Math.sin(now * 0.002) * 12 * dt;
+          if (Math.random() < dt * 1.4) bubblesAt(o.x, o.y, 1);
+          if (o.t > 1.5) { o.state = 'rise'; o.vy = -40; }
+          break;
+        case 'struggle':
+          if (Math.random() < dt * 5) bubblesAt(o.x, o.y, 1);
+          if (o.t > 1.05) {
+            if (o.doom) { die(o); objs.splice(objs.indexOf(o), 1); }
+            else { o.state = 'rise'; o.vy = -120; }
+          }
+          break;
+        case 'ghost':
+          o.y += o.vy * dt;
+          o.x += Math.sin(now * 0.003 + o.rot) * 18 * dt;
+          if (o.t > 2.2) o.alpha -= 0.35 * dt;
+          if (o.alpha <= 0 || o.y - window.scrollY < -140) objs.splice(i, 1);
+          break;
+        case 'fuse':
+          o.y += 24 * dt;
+          if (Math.random() < dt * 6) bubblesAt(o.x, o.y, 1);
+          if (o.t > 1.15) { explode(o); objs.splice(i, 1); }
+          break;
+        case 'crush':
+          if (o.t > 0.55) { pop(o); objs.splice(i, 1); }
+          break;
+      }
+    }
+
+    for (i = animals.length - 1; i >= 0; i--) {
+      var a = animals[i];
+      a.x += a.dir * a.sp * dt;
+      if (a.x < -80 || a.x > W + 80) animals.splice(i, 1);
+    }
+
+    for (i = fx.length - 1; i >= 0; i--) {
+      var f = fx[i];
+      f.t += dt;
+      if (f.type === 'bub') {
+        f.x += (f.vx || 0) * dt;
+        f.y += f.vy * dt;
+        f.vy -= 20 * dt;
+      } else if (f.type === 'ring') {
+        f.r += f.vr * dt;
+      }
+      if (f.t >= f.life) fx.splice(i, 1);
+    }
+
+    // spawn zone animals in the visible underwater band
+    spawnIn -= dt;
+    if (spawnIn <= 0) {
+      spawnIn = 2 + Math.random() * 2;
+      if (animals.length < 6) {
+        var y0 = Math.max(waterDoc + 40, window.scrollY + 30);
+        var y1 = Math.min(window.scrollY + Hv - 30, floorDoc - 20);
+        if (y1 > y0) {
+          var docY = y0 + Math.random() * (y1 - y0);
+          var pool = ZONE_ANIMALS[zoneAt(docY)];
+          var dir = Math.random() < 0.5 ? -1 : 1;
+          var z = zoneAt(docY);
+          animals.push({
+            e: pool[(Math.random() * pool.length) | 0],
+            x: dir < 0 ? W + 60 : -60,
+            y: docY,
+            dir: dir,
+            sp: 20 + Math.random() * 30,
+            size: z === 'mid' ? 22 + Math.random() * 12 : 17 + Math.random() * 11,
+            ph: Math.random() * 6.28,
+            bob: 2 + Math.random() * 4,
+            flee: false
+          });
+        }
+      }
+    }
+
+    // bioluminescent specks track the viewport's depth
+    var m = viewMeters();
+    var target = m < 420 ? 0 : Math.round(((m - 420) / 630) * 70);
+    while (sparks.length < target) {
+      sparks.push({ x: Math.random() * W, y: Math.random() * Hv, r: 0.8 + Math.random() * 1.9,
+        ph: Math.random() * 6.28, vy: -(4 + Math.random() * 10), big: Math.random() < 0.12 });
+    }
+    if (sparks.length > target) sparks.length = target;
+    for (i = 0; i < sparks.length; i++) {
+      var sp = sparks[i];
+      sp.y += sp.vy * dt;
+      sp.x += Math.sin(now * 0.0006 + sp.ph) * 8 * dt;
+      if (sp.y < -6) { sp.y = Hv + 6; sp.x = Math.random() * W; }
+    }
+  }
+
+  function drawEmoji(e, x, y, size, flip, rot, alpha) {
+    ctx.save();
+    ctx.translate(x, y);
+    if (flip) ctx.scale(-1, 1);
+    if (rot) ctx.rotate(rot);
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    ctx.font = Math.round(size) + 'px ' + EMOJI_FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(e, 0, 0);
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, Hv);
+    var sy = window.scrollY, i;
+
+    ctx.fillStyle = sparkColor;
+    for (i = 0; i < sparks.length; i++) {
+      var sp = sparks[i];
+      var tw = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(now * 0.002 + sp.ph * 3));
+      ctx.globalAlpha = tw;
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y, sp.r, 0, 6.2832);
+      ctx.fill();
+      if (sp.big) {
+        ctx.globalAlpha = tw * 0.22;
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, sp.r * 3.2, 0, 6.2832);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    for (i = 0; i < animals.length; i++) {
+      var a = animals[i];
+      var ay = a.y - sy + Math.sin(now * 0.0015 + a.ph) * a.bob;
+      if (ay < -60 || ay > Hv + 60) continue;
+      drawEmoji(a.e, a.x, ay, a.size, a.dir > 0, Math.sin(now * 0.001 + a.ph) * 0.08, a.flee ? 0.9 : 0.85);
+    }
+
+    for (i = 0; i < objs.length; i++) {
+      var o = objs[i];
+      var oy = o.y - sy;
+      if (oy < -140 || oy > Hv + 140) continue;
+      var ox = o.x, rot = o.rot, alpha = o.alpha;
+      if (o.state === 'struggle' || o.state === 'crush') {
+        ox += (Math.random() - 0.5) * 5;
+        oy += (Math.random() - 0.5) * 4;
+      }
+      if (o.state === 'fuse') alpha = 0.6 + 0.4 * Math.sin(now * 0.03);
+      if (o.state === 'ghost') alpha = o.alpha * (0.7 + 0.3 * Math.sin(now * 0.006));
+      if (o.state === 'rest') rot = 0.5;
+      drawEmoji(o.e, ox, oy, o.size, false, rot, alpha);
+    }
+
+    for (i = 0; i < fx.length; i++) {
+      var f = fx[i];
+      var k = 1 - f.t / f.life;
+      var fy = f.y - sy;
+      if (f.type === 'bub') {
+        ctx.globalAlpha = Math.max(0, k) * 0.8;
+        ctx.fillStyle = sparkColor;
+        ctx.beginPath();
+        ctx.arc(f.x, fy, f.r, 0, 6.2832);
+        ctx.fill();
+      } else if (f.type === 'ring') {
+        ctx.globalAlpha = Math.max(0, k) * 0.9;
+        ctx.strokeStyle = sparkColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(f.x, fy, f.r, 0, 6.2832);
+        ctx.stroke();
+      } else if (f.type === 'flash') {
+        drawEmoji('💥', f.x, fy, f.size * (1 + (1 - k) * 0.7), false, 0, k);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function active() {
+    return objs.length > 0 || animals.length > 0 || fx.length > 0 || sparks.length > 0 || viewMeters() >= 420;
+  }
+
+  function loop(t) {
+    raf = 0;
+    if (document.hidden) return;
+    now = t;
+    var dt = Math.min(0.05, Math.max(0.001, (t - lastT) / 1000));
+    lastT = t;
+    remeasureIn -= dt;
+    if (remeasureIn <= 0) { remeasureIn = 3; measure(); }
+    update(dt);
+    draw();
+    if (active()) raf = requestAnimationFrame(loop);
+    else {
+      ctx.clearRect(0, 0, W, Hv);
+      idle();
+    }
+  }
+  function idle() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(function () { wake(); }, 500);
+  }
+  function wake() {
+    if (!raf && !document.hidden) {
+      if (active()) {
+        lastT = performance.now();
+        raf = requestAnimationFrame(loop);
+      } else idle();
+    }
+  }
+
+  measure();
+  window.addEventListener('resize', function () { measure(); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) wake(); });
+  window.addEventListener('scroll', function () { wake(); }, { passive: true });
+
+  var dark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  if (dark) {
+    var onT = function () { measure(); };
+    if (dark.addEventListener) dark.addEventListener('change', onT); else if (dark.addListener) dark.addListener(onT);
+  }
+  if ('MutationObserver' in window) {
+    new MutationObserver(function () { measure(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented) return;
+    if (e.target && e.target.closest && e.target.closest('a,button,input,select,textarea,video,dialog,label')) return;
+    if (e.target && e.target.id === 'sea-canvas') return;
+    if (window.getSelection && String(window.getSelection())) return;
+    spawnObject(e.clientX, e.clientY);
+  });
+
+  window.__deep = { spawn: spawnObject, objs: objs, animals: animals, sparks: sparks };
+  wake();
 })();
 
 /* Depth gauge: the hidden scrollbar, read as metres below the surface. */
