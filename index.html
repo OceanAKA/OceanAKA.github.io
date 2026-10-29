@@ -349,7 +349,7 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
   <div class="hero" id="top">
     <div>
       <h1 class="rise">Ocean <span>Arbeit</span></h1>
-      <p class="intro rise d1">Computer science student at the University of Hawaiʻi at Mānoa. I build software people actually use: <strong>a Chrome extension</strong> on the Web Store, <strong>a transit alarm</strong> in beta, and <strong>a multiplayer Roblox game</strong>.</p>
+      <p class="intro rise d1">Computer science student at the University of Hawaiʻi at Mānoa. I build software people actually use: <strong>a Chrome extension</strong> on the Web Store, <strong>a transit alarm</strong> in beta, and <strong>a desktop app</strong> that DJs around your deaths in Valorant.</p>
       <div class="hero-links rise d2">
         <a class="btn primary" href="#work">See my work</a>
         <a class="btn" href="https://github.com/OceanAKA">
@@ -428,6 +428,48 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
         </div>
       </article>
 
+      <!-- Lock In -->
+      <article class="project">
+        <figure class="figure media">
+          <button class="zoom" type="button" aria-label="Enlarge: Lock In main window"><img src="assets/lockin-main.jpg" alt="Lock In's status bar reading Valorant, match live, dead, music playing" width="920" height="575"></button>
+        </figure>
+        <div class="p-body">
+          <div class="p-top">
+            <span class="pill live">Open source · Windows</span>
+          </div>
+          <h3>Lock In</h3>
+          <p class="lede">A Windows app that plays your music while you're dead or in menus, and pauses it the instant the round goes live — for Valorant, League of Legends and Marvel Rivals.</p>
+          <ul class="facts">
+            <li><b>3</b><span>games, each with its own state adapter</span></li>
+            <li><b>~10 ms</b><span>per screen read with Windows' built-in OCR</span></li>
+            <li><b>0</b><span>runtime dependencies — Electron and nothing else</span></li>
+          </ul>
+          <ul class="detail">
+            <li>Reads death from the game itself: Riot's local API for League, and OCR of the on-screen "KILLED BY" banner for Valorant and Marvel Rivals.</li>
+            <li>Hype mode reads the HUD's alive counters off the screen and drops your hype track when it's down to a 1v1 clutch.</li>
+            <li>Controls Spotify, YouTube or any player through Windows' own media layer — no account or API key. Verified against a full 61-round Valorant match.</li>
+          </ul>
+          <div class="stack mono">Electron · Node.js · Windows OCR &amp; media APIs · PowerShell</div>
+          <div class="p-links">
+            <a href="https://github.com/OceanAKA/LockIn">Source on GitHub ↗</a>
+          </div>
+        </div>
+        <div class="gallery cols-3">
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: death detection pane"><img src="assets/lockin-death.jpg" alt="Death pane: OCR engine ready, last killed by, and a tally of who kills you most" width="920" height="1702"></button>
+            <figcaption>Death detection: OCR reads the kill banner and tallies your killers. Demo data shown.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: hype mode pane"><img src="assets/lockin-hype.jpg" alt="Hype mode pane with HUD digit scanner settings" width="920" height="1702"></button>
+            <figcaption>Hype mode: it reads the HUD's alive counters and drops your track for a 1v1.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: death reminder card"><img src="assets/lockin-overlay.jpg" alt="On-screen reminder card: Do 5 pushups, death no 18" width="1170" height="1560"></button>
+            <figcaption>The on-screen card when you die. Pushups optional but encouraged.</figcaption>
+          </figure>
+        </div>
+      </article>
+
       <!-- Nodoff -->
       <article class="project">
         <figure class="figure media tall">
@@ -470,50 +512,6 @@ footer { padding-block: 24px 48px; color: var(--muted); display: flex; justify-c
         </div>
       </article>
 
-      <!-- Critter Clash -->
-      <article class="project">
-        <figure class="figure media">
-          <button class="zoom" type="button" aria-label="Enlarge: battle map"><img src="assets/critter-map.jpg" alt="Overhead render of the Critter Clash battle map: a cliff-ringed arena with paths meeting at the center" width="1400" height="1050"></button>
-        </figure>
-        <div class="p-body">
-          <div class="p-top">
-            <span class="pill beta">Playable beta · Roblox</span>
-          </div>
-          <h3>Critter Clash</h3>
-          <p class="lede">A multiplayer army battler. Six sides earn food, spend it calling in animal troops by supply drop, and fight over seven meadows. Hold more ground, earn more food, field a bigger army.</p>
-          <ul class="facts">
-            <li><b>6</b><span>sides per match, filled by bots when short</span></li>
-            <li><b>12</b><span>animals, with 50 skins to hatch</span></li>
-            <li><b>15 min</b><span>rounds, last base standing wins</span></li>
-          </ul>
-          <ul class="detail">
-            <li>Game logic runs on the server so clients can't cheat. Every system is split into config, pure logic, server and client modules.</li>
-            <li>Lobby with ranked queue, loadouts, quests, leaderboards and saved progress.</li>
-          </ul>
-          <div class="stack mono">Roblox · Luau</div>
-          <div class="p-links">
-            <a href="https://www.roblox.com/games/74973903903329/CritterClash">Play on Roblox ↗</a>
-          </div>
-        </div>
-        <div class="gallery cols-4">
-          <figure class="shot">
-            <video src="assets/critter-yeti-smash.mp4" poster="assets/critter-yeti-smash-poster.jpg" autoplay muted loop playsinline aria-label="Yeti boss performing its Glacier Smash attack"></video>
-            <figcaption>Yeti boss, Glacier Smash attack.</figcaption>
-          </figure>
-          <figure class="shot">
-            <video src="assets/critter-sandworm.mp4" poster="assets/critter-sandworm-poster.jpg" autoplay muted loop playsinline aria-label="Sandworm boss performing its Dune Sidewinder attack"></video>
-            <figcaption>Sandworm boss, Dune Sidewinder attack.</figcaption>
-          </figure>
-          <figure class="shot">
-            <button class="zoom" type="button" aria-label="Enlarge: valley view"><img src="assets/critter-valley.jpg" alt="Ground-level render of the battle map with trees, paths and cliffs" width="1200" height="900"></button>
-            <figcaption>The arena from ground level.</figcaption>
-          </figure>
-          <figure class="shot">
-            <button class="zoom" type="button" aria-label="Enlarge: egg collection"><img src="assets/critter-eggs.jpg" alt="Five biome eggs: river, desert, night, storm and snow" width="1400" height="741"></button>
-            <figcaption>Five biome eggs to hatch skins from.</figcaption>
-          </figure>
-        </div>
-      </article>
     </div>
   </section>
 
