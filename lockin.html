@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lock In · Ocean Arbeit</title>
+<meta name="description" content="A Windows app that plays your music while you are dead or in menus, and pauses it when the round goes live.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="index.html" aria-label="Ocean Arbeit, home">OA</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="index.html#work">Projects</a>
+      <a href="index.html#experience">Experience</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </header>
+  <div class="crumb mono"><a href="index.html#work">← All projects</a></div>
+</div>
+
+<div class="sea sea-slim" id="sea" aria-hidden="true">
+  <canvas id="sea-canvas"></canvas>
+</div>
+
+<div class="wrap">
+  <section class="project-page">
+      <!-- Lock In -->
+      <article class="project">
+        <figure class="figure media">
+          <button class="zoom" type="button" aria-label="Enlarge: Lock In main window"><img src="assets/lockin-main.jpg" alt="Lock In's status bar reading Valorant, match live, dead, music playing" width="920" height="575"></button>
+        </figure>
+        <div class="p-body">
+          <div class="p-top">
+            <span class="pill live">Open source · Windows</span>
+          </div>
+          <h1>Lock In</h1>
+          <p class="lede">A Windows app that plays your music while you're dead or in menus, and pauses it the instant the round goes live — for Valorant, League of Legends and Marvel Rivals.</p>
+          <ul class="facts">
+            <li><b>3</b><span>games, each with its own state adapter</span></li>
+            <li><b>~10 ms</b><span>per screen read with Windows' built-in OCR</span></li>
+            <li><b>0</b><span>runtime dependencies — Electron and nothing else</span></li>
+          </ul>
+          <ul class="detail">
+            <li>Reads death from the game itself: Riot's local API for League, and OCR of the on-screen "KILLED BY" banner for Valorant and Marvel Rivals.</li>
+            <li>Hype mode reads the HUD's alive counters off the screen and drops your hype track when it's down to a 1v1 clutch.</li>
+            <li>Controls Spotify, YouTube or any player through Windows' own media layer — no account or API key. Verified against a full 61-round Valorant match.</li>
+          </ul>
+          <div class="stack mono">Electron · Node.js · Windows OCR &amp; media APIs · PowerShell</div>
+          <div class="p-links">
+            <a href="https://github.com/OceanAKA/LockIn">Source on GitHub ↗</a>
+          </div>
+        </div>
+        <div class="gallery cols-3">
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: death detection pane"><img src="assets/lockin-death.jpg" alt="Death pane: OCR engine ready, last killed by, and a tally of who kills you most" width="920" height="1702"></button>
+            <figcaption>Death detection: OCR reads the kill banner and tallies your killers. Demo data shown.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: hype mode pane"><img src="assets/lockin-hype.jpg" alt="Hype mode pane with HUD digit scanner settings" width="920" height="1702"></button>
+            <figcaption>Hype mode: it reads the HUD's alive counters and drops your track for a 1v1.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: death reminder card"><img src="assets/lockin-overlay.jpg" alt="On-screen reminder card: Do 5 pushups, death no 18" width="1170" height="1560"></button>
+            <figcaption>The on-screen card when you die. Pushups optional but encouraged.</figcaption>
+          </figure>
+        </div>
+      </article>
+  </section>
+
+  <nav class="pager" aria-label="More projects">
+    <a href="pricechecker.html">← Card Price Checker</a>
+    <a href="nodoff.html">Nodoff →</a>
+  </nav>
+
+  <footer class="mono">
+    <span>© 2026 Ocean Arbeit</span>
+    <span id="floor">Made in Honolulu</span>
+  </footer>
+</div>
+
+<div class="depth mono" id="depth" aria-hidden="true">▼ 0 m</div>
+
+<dialog class="lightbox" id="lightbox" aria-label="Enlarged screenshot">
+  <figure><img id="lightbox-img" alt=""><figcaption id="lightbox-cap"></figcaption></figure>
+  <button class="close" id="lightbox-close" type="button" aria-label="Close">×</button>
+</dialog>
+
+<script src="assets/ocean.js"></script>
+</body>
+</html>

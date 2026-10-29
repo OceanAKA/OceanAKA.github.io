@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Card Price Checker · Ocean Arbeit</title>
+<meta name="description" content="A Chrome extension that reads the Pokémon card on a Whatnot live stream and shows its market price.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="index.html" aria-label="Ocean Arbeit, home">OA</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="index.html#work">Projects</a>
+      <a href="index.html#experience">Experience</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </header>
+  <div class="crumb mono"><a href="index.html#work">← All projects</a></div>
+</div>
+
+<div class="sea sea-slim" id="sea" aria-hidden="true">
+  <canvas id="sea-canvas"></canvas>
+</div>
+
+<div class="wrap">
+  <section class="project-page">
+      <!-- Card Price Checker -->
+      <article class="project">
+        <figure class="figure media">
+          <video src="assets/pricecheck-demo.mp4" poster="assets/pricecheck-demo-poster.jpg" autoplay muted loop playsinline aria-label="Demo: a holo card appears on a test stream and the Card Prices panel scans it automatically"></video>
+        </figure>
+        <div class="p-body">
+          <div class="p-top">
+            <span class="pill live">Live · Chrome Web Store</span>
+          </div>
+          <h1>Card Price Checker for Whatnot</h1>
+          <p class="lede">A Chrome extension that reads the Pokémon card a seller is holding up on a Whatnot live stream and shows its market price, so you can tell in seconds whether the bid is a deal.</p>
+          <ul class="facts">
+            <li><b>~95%</b><span>ID accuracy across 10+ stream setups</span></li>
+            <li><b>0.1–0.7 s</b><span>price lookups, with caching</span></li>
+            <li><b>84</b><span>automated tests with mocked APIs</span></li>
+          </ul>
+          <ul class="detail">
+            <li>Runs Chrome's on-device AI (Gemini Nano) when it can and falls back to a hosted card-ID service, so no API key is needed.</li>
+            <li>Auto-scan watches the video and fires once a new card settles, ignoring foil sparkle, hand sway and card backs.</li>
+            <li>English and Japanese prices, plus exact-grade prices for PSA, CGC and BGS slabs.</li>
+          </ul>
+          <div class="stack mono">JavaScript · Chrome Extensions (MV3) · Gemini Nano · Cloudflare Workers</div>
+          <div class="p-links">
+            <a href="https://chromewebstore.google.com/detail/card-price-checker-for-wh/ipnheelahlheggemeckmlbckkbfpjboh">Install from Chrome Web Store ↗</a>
+            <a href="https://github.com/OceanAKA/WhatnotPriceChecker">Source on GitHub ↗</a>
+          </div>
+        </div>
+        <div class="gallery cols-2">
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: auto-scan test results"><img src="assets/pricecheck-bench.jpg" alt="Auto-scan browser test results: 5 of 5 scenarios passed, with timelines marking when each scan fired" width="1000" height="700"></button>
+            <figcaption>The auto-scan test bench. A scripted fake stream plays through a real video element, and every scenario passes. Green lines mark when each scan fired.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: Card Prices panel"><img src="assets/pricecheck-panel.jpg" alt="The Card Prices panel beside a test stream, showing a matched card and its price" width="900" height="700"></button>
+            <figcaption>The Card Prices panel over a test stream. The card and price shown are stubbed test data.</figcaption>
+          </figure>
+        </div>
+      </article>
+  </section>
+
+  <nav class="pager" aria-label="More projects">
+    <span></span>
+    <a href="lockin.html">Lock In →</a>
+  </nav>
+
+  <footer class="mono">
+    <span>© 2026 Ocean Arbeit</span>
+    <span id="floor">Made in Honolulu</span>
+  </footer>
+</div>
+
+<div class="depth mono" id="depth" aria-hidden="true">▼ 0 m</div>
+
+<dialog class="lightbox" id="lightbox" aria-label="Enlarged screenshot">
+  <figure><img id="lightbox-img" alt=""><figcaption id="lightbox-cap"></figcaption></figure>
+  <button class="close" id="lightbox-close" type="button" aria-label="Close">×</button>
+</dialog>
+
+<script src="assets/ocean.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nodoff · Ocean Arbeit</title>
+<meta name="description" content="A transit alarm that wakes you before your stop, built on native geofencing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="index.html" aria-label="Ocean Arbeit, home">OA</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="index.html#work">Projects</a>
+      <a href="index.html#experience">Experience</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+  </header>
+  <div class="crumb mono"><a href="index.html#work">← All projects</a></div>
+</div>
+
+<div class="sea sea-slim" id="sea" aria-hidden="true">
+  <canvas id="sea-canvas"></canvas>
+</div>
+
+<div class="wrap">
+  <section class="project-page">
+      <!-- Nodoff -->
+      <article class="project">
+        <figure class="figure media tall">
+          <video class="phone" src="assets/nodoff-demo.mp4" poster="assets/nodoff-demo-poster.jpg" autoplay muted loop playsinline aria-label="Nodoff landing page with an animated map of stops and alarm zones"></video>
+        </figure>
+        <div class="p-body">
+          <div class="p-top">
+            <span class="pill beta">Closed beta · TestFlight</span>
+          </div>
+          <h1>Nodoff</h1>
+          <p class="lede">A transit alarm for people who fall asleep on the bus. It sounds a loud, vibrating alarm as you approach your stop, even with the app closed or the phone locked.</p>
+          <ul class="facts">
+            <li><b>3,831</b><span>stops from TheBus and Skyline data</span></li>
+            <li><b>18</b><span>nearest stops armed under iOS's 20-region limit</span></li>
+            <li><b>4</b><span>beta testers on TestFlight</span></li>
+          </ul>
+          <ul class="detail">
+            <li>Uses the phone's native geofencing instead of streaming GPS, so it barely touches the battery while you ride.</li>
+            <li>Re-picks which stops to watch every 2 km, and survives the app being closed or the phone restarting.</li>
+            <li>Added silent alerts after tester feedback.</li>
+          </ul>
+          <div class="stack mono">Next.js · Capacitor · TypeScript · Postgres/Prisma · GTFS</div>
+          <div class="p-links">
+            <a href="https://nodoff.online">nodoff.online ↗</a>
+          </div>
+        </div>
+        <div class="gallery cols-3">
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: onboarding"><img src="assets/nodoff-onboarding.jpg" alt="Nodoff onboarding sheet: Never miss your stop" width="780" height="1688"></button>
+            <figcaption>First-run onboarding.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: alarms dashboard"><img src="assets/nodoff-alarms.jpg" alt="Alarms dashboard listing three stops, one armed and monitoring" width="780" height="800"></button>
+            <figcaption>The alarms dashboard, shown with sample stops.</figcaption>
+          </figure>
+          <figure class="shot">
+            <button class="zoom" type="button" aria-label="Enlarge: landing page"><img src="assets/nodoff-landing.jpg" alt="Nodoff landing page: Miss naps, never your stop" width="780" height="1688"></button>
+            <figcaption>The landing page on a phone.</figcaption>
+          </figure>
+        </div>
+      </article>
+  </section>
+
+  <nav class="pager" aria-label="More projects">
+    <a href="lockin.html">← Lock In</a>
+    <span></span>
+  </nav>
+
+  <footer class="mono">
+    <span>© 2026 Ocean Arbeit</span>
+    <span id="floor">Made in Honolulu</span>
+  </footer>
+</div>
+
+<div class="depth mono" id="depth" aria-hidden="true">▼ 0 m</div>
+
+<dialog class="lightbox" id="lightbox" aria-label="Enlarged screenshot">
+  <figure><img id="lightbox-img" alt=""><figcaption id="lightbox-cap"></figcaption></figure>
+  <button class="close" id="lightbox-close" type="button" aria-label="Close">×</button>
+</dialog>
+
+<script src="assets/ocean.js"></script>
+</body>
+</html>
